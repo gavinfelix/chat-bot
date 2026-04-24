@@ -3,7 +3,7 @@ import { db } from '@/db';
 import { messages as messagesTable } from '@/db/schema';
 
 export async function POST(req: Request) {
-  const { messages }: { messages: UIMessage[] } = await req.json();
+  const { messages, chatId }: { messages: UIMessage[]; chatId: string } = await req.json();
 
   const userMessage = messages[messages.length - 1];
 
@@ -14,6 +14,7 @@ export async function POST(req: Request) {
     .join('');
 
   await db.insert(messagesTable).values({
+    chatId,
     role: 'user',
     content: userMessageContent,
   });
@@ -42,6 +43,7 @@ export async function POST(req: Request) {
         .join('');
 
       await db.insert(messagesTable).values({
+        chatId,
         role: 'assistant',
         content,
       });

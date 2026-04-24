@@ -5,14 +5,18 @@ import Messages from './messages';
 import { useChat } from '@ai-sdk/react';
 import { DbMessage } from '@/lib/ai/types';
 
-export default function ChatPage() {
+type Props = {
+  chatId: string;
+};
+
+export default function ChatPage({ chatId }: Props) {
   const { messages, setMessages, sendMessage } = useChat();
   const [input, setInput] = useState('');
 
   // init messages
   useEffect(() => {
     async function loadMessages() {
-      const res = await fetch('/api/messages');
+      const res = await fetch(`/api/messages/${chatId}`);
       const data = await res.json();
 
       const uiMessages = data.map((message: DbMessage) => ({
@@ -29,13 +33,20 @@ export default function ChatPage() {
     }
 
     loadMessages();
-  }, [setMessages]);
+  }, [setMessages, chatId]);
 
   const triggerSend = () => {
     const text = input.trim();
 
     if (text === '') return;
-    sendMessage({ text });
+    sendMessage(
+      { text },
+      {
+        body: {
+          chatId,
+        },
+      },
+    );
 
     setInput('');
   };
