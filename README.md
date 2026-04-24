@@ -28,3 +28,32 @@ The goal of this project is to practice and demonstrate a complete AI applicatio
 - Message persistence with PostgreSQL
 - Chat history loading by chatId
 - Dynamic chat route: `/chat/[chatId]`
+
+## Project Structure
+
+```txt
+app/
+  api/
+    chat/
+      route.ts
+    messages/
+      route.ts
+  chat/
+    [chatId]/
+      page.tsx
+  page.tsx
+
+components/
+  chat/
+    chat-page.tsx
+    chat-input.tsx
+    messages.tsx
+    message.tsx
+  ui/
+
+db/
+  index.ts
+  schema.ts
+
+drizzle/
+```
