@@ -18,3 +18,13 @@ The goal of this project is to practice and demonstrate a complete AI applicatio
 - Drizzle ORM
 - Neon Postgres
 - Vercel Deployment
+
+## Features
+
+- AI chat interface
+- User and assistant message rendering
+- Message input component
+- Server-side API route for AI response
+- Message persistence with PostgreSQL
+- Chat history loading by chatId
+- Dynamic chat route: `/chat/[chatId]`
