@@ -4,7 +4,6 @@ import ChatInput from './chat-input';
 import Messages from './messages';
 import { useChat } from '@ai-sdk/react';
 import { DbMessage } from '@/lib/ai/types';
-import Sidebar from '@/components/sidebar';
 
 type Props = {
   chatId: string;
@@ -54,7 +53,6 @@ export default function ChatPage({ chatId }: Props) {
 
   return (
     <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <Sidebar chatId={chatId} />
       <Messages messages={messages} />
 
       <ChatInput sendMessage={triggerSend} input={input} setInput={setInput} />

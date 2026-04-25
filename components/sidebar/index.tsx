@@ -20,7 +20,7 @@ export default function Sidebar({ chatId }: Props) {
       const data = await res.json();
       setChats(data);
 
-      console.log('loadChat', data, chats);
+      console.log('loadChat', data);
     }
 
     loadChat();
