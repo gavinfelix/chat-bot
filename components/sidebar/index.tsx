@@ -1,7 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { Button } from '@/components/ui/button';
 
 type Props = {
   chatId: string;
@@ -13,6 +15,7 @@ type Chat = {
 };
 
 export default function Sidebar({ chatId }: Props) {
+  const router = useRouter();
   const [chats, setChats] = useState<Chat[]>([]);
 
   useEffect(() => {
@@ -27,11 +30,18 @@ export default function Sidebar({ chatId }: Props) {
     loadChat();
   }, [chatId]);
 
-  // const getHistory = (chatId: string) => {};
+  const createNewChat = () => {
+    const newChatId = crypto.randomUUID();
+    router.push(`/chat/${newChatId}`);
+  };
 
   return (
     <div className="flex flex-col w-100">
       <p>menu</p>
+      <Button onClick={createNewChat} className="w-50">
+        New chat
+      </Button>
+
       {chats.map((item) => (
         <Link href={`/chat/${item.chatId}`} key={item.chatId}>
           {item.title}
