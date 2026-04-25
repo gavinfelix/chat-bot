@@ -12,7 +12,7 @@ type Chat = {
 };
 
 export default function Sidebar({ chatId }: Props) {
-  const [chats, setChats] = useState<Chat | null>(null);
+  const [chats, setChats] = useState<Chat[]>([]);
 
   useEffect(() => {
     async function loadChat() {
@@ -20,7 +20,7 @@ export default function Sidebar({ chatId }: Props) {
       const data = await res.json();
       setChats(data);
 
-      // console.log('loadChat', data, chats);
+      console.log('loadChat', data, chats);
     }
 
     loadChat();
@@ -29,10 +29,9 @@ export default function Sidebar({ chatId }: Props) {
   return (
     <div className="flex flex-col w-100">
       <p>menu</p>
-      {/* {data.map((item) => (
+      {chats.map((item) => (
         <div key={item.chatId}>{item.title}</div>
-      ))} */}
-      {chats?.title || 'cha'}
+      ))}
     </div>
   );
 }
