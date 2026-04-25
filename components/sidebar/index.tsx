@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 
 type Props = {
   chatId: string;
@@ -26,11 +27,15 @@ export default function Sidebar({ chatId }: Props) {
     loadChat();
   }, [chatId]);
 
+  // const getHistory = (chatId: string) => {};
+
   return (
     <div className="flex flex-col w-100">
       <p>menu</p>
       {chats.map((item) => (
-        <div key={item.chatId}>{item.title}</div>
+        <Link href={`/chat/${item.chatId}`} key={item.chatId}>
+          {item.title}
+        </Link>
       ))}
     </div>
   );
