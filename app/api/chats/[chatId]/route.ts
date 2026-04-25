@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/db';
 import { chats } from '@/db/schema';
-import { asc, eq } from 'drizzle-orm';
+import { desc, eq } from 'drizzle-orm';
 
 export async function GET(req: Request, ctx: RouteContext<'/api/chats/[chatId]'>) {
   try {
@@ -19,7 +19,7 @@ export async function GET(req: Request, ctx: RouteContext<'/api/chats/[chatId]'>
         .returning();
     }
 
-    const chatsData = await db.select().from(chats).orderBy(asc(chats.createdAt));
+    const chatsData = await db.select().from(chats).orderBy(desc(chats.updatedAt));
 
     console.log('chats data: ', chatsData);
 
