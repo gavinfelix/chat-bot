@@ -7,6 +7,9 @@ export async function POST(req: Request) {
   const { messages, chatId }: { messages: UIMessage[]; chatId: string } = await req.json();
 
   const userMessage = messages[messages.length - 1];
+  if (!userMessage || userMessage.role !== 'user') {
+    return new Response('Invalid user message', { status: 400 });
+  }
 
   // insert the message sended by user to database
   const userMessageContent = userMessage.parts
@@ -21,10 +24,14 @@ export async function POST(req: Request) {
   });
 
   // update the time of updatedAt when user's message inserted
+  const isFirstMessage = messages.length === 1;
+
+  const title = userMessageContent.slice(0, 20) || 'New chat';
   await db
     .update(chatsTable)
     .set({
       updatedAt: new Date(),
+      ...(isFirstMessage ? { title } : {}),
     })
     .where(eq(chatsTable.id, chatId));
 
