@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { usePathname } from 'next/navigation';
 
 type Props = {
   chatId: string;
@@ -16,8 +17,11 @@ type Chat = {
 };
 
 export default function Sidebar({ chatId }: Props) {
-  const router = useRouter();
   const [chats, setChats] = useState<Chat[]>([]);
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const currentChatId = pathname.startsWith('/chat/') ? pathname.split('/chat/')[1] : null;
 
   useEffect(() => {
     async function loadChat() {
@@ -60,13 +64,18 @@ export default function Sidebar({ chatId }: Props) {
       <Button onClick={createNewChat} className="w-50">
         New chat
       </Button>
+      <Button onClick={() => router.push('/')} className="w-50">
+        Back home
+      </Button>
 
       {chats.map((item) => (
         <Link
           href={`/chat/${item.id}`}
           className={cn(
             'rounded-md px-3 py-2 text-sm transition-colors',
-            item.id === chatId ? 'bg-zinc-900 text-white' : 'text-zinc-700 hover:bg-zinc-100',
+            item.id === currentChatId
+              ? 'bg-zinc-900 text-white'
+              : 'text-zinc-700 hover:bg-zinc-100',
           )}
           key={item.id}
         >
