@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 type Props = {
   chatId: string;
@@ -61,7 +62,14 @@ export default function Sidebar({ chatId }: Props) {
       </Button>
 
       {chats.map((item) => (
-        <Link href={`/chat/${item.id}`} key={item.id}>
+        <Link
+          href={`/chat/${item.id}`}
+          className={cn(
+            'rounded-md px-3 py-2 text-sm transition-colors',
+            item.id === chatId ? 'bg-zinc-900 text-white' : 'text-zinc-700 hover:bg-zinc-100',
+          )}
+          key={item.id}
+        >
           {item.title}
         </Link>
       ))}
