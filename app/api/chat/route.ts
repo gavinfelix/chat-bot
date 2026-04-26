@@ -1,6 +1,7 @@
 import { createIdGenerator, streamText, UIMessage, convertToModelMessages } from 'ai';
 import { db } from '@/db';
-import { messages as messagesTable } from '@/db/schema';
+import { messages as messagesTable, chats as chatsTable } from '@/db/schema';
+import { eq } from 'drizzle-orm';
 
 export async function POST(req: Request) {
   const { messages, chatId }: { messages: UIMessage[]; chatId: string } = await req.json();
@@ -18,6 +19,14 @@ export async function POST(req: Request) {
     role: 'user',
     content: userMessageContent,
   });
+
+  // update the time of updatedAt when user's message inserted
+  await db
+    .update(chatsTable)
+    .set({
+      updatedAt: new Date(),
+    })
+    .where(eq(chatsTable.id, chatId));
 
   const result = streamText({
     model: 'anthropic/claude-sonnet-4.5',
