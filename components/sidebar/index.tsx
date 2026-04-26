@@ -20,23 +20,23 @@ export default function Sidebar() {
   const currentChatId = pathname.startsWith('/chat/') ? pathname.split('/chat/')[1] : null;
 
   useEffect(() => {
-    async function loadChat() {
-      const res = await fetch(`/api/chats/${currentChatId}`);
+    async function loadChats() {
+      const res = await fetch(`/api/chats`);
       const data = await res.json();
       setChats(data);
 
       console.log('loadChat', data);
     }
 
-    loadChat();
-  }, [currentChatId]);
+    loadChats();
+  }, []);
 
   const createNewChat = async () => {
     const chatId = crypto.randomUUID();
-    const res = await fetch('api/chats', {
+    const res = await fetch('/api/chats', {
       method: 'POST',
       headers: {
-        'Content-type': 'application/json',
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         chatId,
