@@ -30,9 +30,27 @@ export default function Sidebar({ chatId }: Props) {
     loadChat();
   }, [chatId]);
 
-  const createNewChat = () => {
-    const newChatId = crypto.randomUUID();
-    router.push(`/chat/${newChatId}`);
+  const createNewChat = async () => {
+    const chatId = crypto.randomUUID();
+    const res = await fetch('api/chats', {
+      method: 'POST',
+      headers: {
+        'Content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        chatId,
+        title: 'New chat',
+      }),
+    });
+
+    if (!res.ok) {
+      console.error('Create chat failed');
+      return;
+    }
+
+    const chat = await res.json();
+
+    router.push(`/chat/${chat.id}`);
   };
 
   return (

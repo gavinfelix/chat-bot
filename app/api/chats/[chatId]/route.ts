@@ -1,24 +1,10 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/db';
 import { chats } from '@/db/schema';
-import { desc, eq } from 'drizzle-orm';
+import { desc } from 'drizzle-orm';
 
-export async function GET(req: Request, ctx: RouteContext<'/api/chats/[chatId]'>) {
+export async function GET() {
   try {
-    const { chatId } = await ctx.params;
-
-    const [chat] = await db.select().from(chats).where(eq(chats.id, chatId)).limit(1);
-
-    if (!chat) {
-      await db
-        .insert(chats)
-        .values({
-          id: chatId,
-          title: 'chat',
-        })
-        .returning();
-    }
-
     const chatsData = await db.select().from(chats).orderBy(desc(chats.updatedAt));
 
     console.log('chats data: ', chatsData);
