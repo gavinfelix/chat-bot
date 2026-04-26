@@ -4,53 +4,53 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useRouter } from 'next/navigation';
-import { useChat } from '@ai-sdk/react';
 
 export default function Home() {
   const [input, setInput] = useState<string>('');
-  const { sendMessage } = useChat();
+  const [loading, setLoading] = useState<boolean>(false);
   const router = useRouter();
 
   const createNewChat = async () => {
-    if (input.trim() === '') return;
+    if (loading || input.trim() === '') return;
 
-    const chatId = crypto.randomUUID();
+    setLoading(true);
 
-    const res = await fetch('/api/chats', {
-      method: 'POST',
-      headers: {
-        'Content-type': 'application/json',
-      },
-      body: JSON.stringify({
-        chatId,
-        title: input.slice(0, 20),
-      }),
-    });
+    try {
+      const chatId = crypto.randomUUID();
 
-    if (!res.ok) {
-      console.log('Create chat failed');
-      return;
-    }
-
-    sendMessage(
-      {
-        text: input,
-      },
-      {
-        body: {
-          chatId,
+      const res = await fetch('/api/chats', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
-      },
-    );
+        body: JSON.stringify({
+          chatId,
+          title: input.trim().slice(0, 20),
+        }),
+      });
 
-    router.push(`/chat/${chatId}`);
+      if (!res.ok) {
+        console.log('Create chat failed');
+        setLoading(false);
+        return;
+      }
+      sessionStorage.setItem(`chat:${chatId}:pending-message`, input.trim());
+
+      router.push(`/chat/${chatId}`);
+    } catch (error) {
+      console.error('Create chat error:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <>
       <h1>Hello! How can I help you.</h1>
       <Input value={input} onChange={(e) => setInput(e.target.value)} />
-      <Button onClick={createNewChat}>Send</Button>
+      <Button disabled={loading} onClick={createNewChat}>
+        {loading ? 'Loading' : 'Send'}
+      </Button>
     </>
   );
 }
