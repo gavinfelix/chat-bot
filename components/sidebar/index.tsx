@@ -7,16 +7,12 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { usePathname } from 'next/navigation';
 
-type Props = {
-  chatId: string;
-};
-
 type Chat = {
   id: string;
   title: string;
 };
 
-export default function Sidebar({ chatId }: Props) {
+export default function Sidebar() {
   const [chats, setChats] = useState<Chat[]>([]);
   const router = useRouter();
   const pathname = usePathname();
@@ -25,7 +21,7 @@ export default function Sidebar({ chatId }: Props) {
 
   useEffect(() => {
     async function loadChat() {
-      const res = await fetch(`/api/chats/${chatId}`);
+      const res = await fetch(`/api/chats/${currentChatId}`);
       const data = await res.json();
       setChats(data);
 
@@ -33,7 +29,7 @@ export default function Sidebar({ chatId }: Props) {
     }
 
     loadChat();
-  }, [chatId]);
+  }, [currentChatId]);
 
   const createNewChat = async () => {
     const chatId = crypto.randomUUID();
