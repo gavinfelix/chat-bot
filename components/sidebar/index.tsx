@@ -10,7 +10,7 @@ type Props = {
 };
 
 type Chat = {
-  chatId: string;
+  id: string;
   title: string;
 };
 
@@ -43,7 +43,7 @@ export default function Sidebar({ chatId }: Props) {
       </Button>
 
       {chats.map((item) => (
-        <Link href={`/chat/${item.chatId}`} key={item.chatId}>
+        <Link href={`/chat/${item.id}`} key={item.id}>
           {item.title}
         </Link>
       ))}

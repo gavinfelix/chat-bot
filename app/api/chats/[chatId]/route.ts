@@ -7,13 +7,13 @@ export async function GET(req: Request, ctx: RouteContext<'/api/chats/[chatId]'>
   try {
     const { chatId } = await ctx.params;
 
-    const [chat] = await db.select().from(chats).where(eq(chats.chatId, chatId)).limit(1);
+    const [chat] = await db.select().from(chats).where(eq(chats.id, chatId)).limit(1);
 
     if (!chat) {
       await db
         .insert(chats)
         .values({
-          chatId,
+          id: chatId,
           title: 'chat',
         })
         .returning();

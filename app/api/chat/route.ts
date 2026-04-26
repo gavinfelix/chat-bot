@@ -26,7 +26,7 @@ export async function POST(req: Request) {
     .set({
       updatedAt: new Date(),
     })
-    .where(eq(chatsTable.chatId, chatId));
+    .where(eq(chatsTable.id, chatId));
 
   const result = streamText({
     model: 'anthropic/claude-sonnet-4.5',
