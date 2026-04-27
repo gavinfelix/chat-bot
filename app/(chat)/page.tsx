@@ -11,6 +11,7 @@ export default function Home() {
   const router = useRouter();
 
   const createNewChat = async () => {
+    const message = input.trim();
     if (loading || input.trim() === '') return;
 
     setLoading(true);
@@ -25,7 +26,7 @@ export default function Home() {
         },
         body: JSON.stringify({
           chatId,
-          title: input.trim().slice(0, 20),
+          title: message.slice(0, 20),
         }),
       });
 
@@ -34,7 +35,7 @@ export default function Home() {
         setLoading(false);
         return;
       }
-      sessionStorage.setItem(`chat:${chatId}:pending-message`, input.trim());
+      sessionStorage.setItem(`chat:${chatId}:pending-message`, message);
 
       router.push(`/chat/${chatId}`);
     } catch (error) {
