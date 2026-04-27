@@ -17,15 +17,12 @@ export default function Home() {
     setLoading(true);
 
     try {
-      const chatId = crypto.randomUUID();
-
       const res = await fetch('/api/chats', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          chatId,
           title: message.slice(0, 20),
         }),
       });
@@ -35,9 +32,12 @@ export default function Home() {
         setLoading(false);
         return;
       }
-      sessionStorage.setItem(`chat:${chatId}:pending-message`, message);
 
-      router.push(`/chat/${chatId}`);
+      const chat = await res.json();
+
+      sessionStorage.setItem(`chat:${chat.id}:pending-message`, message);
+
+      router.push(`/chat/${chat.id}`);
     } catch (error) {
       console.error('Create chat error:', error);
     } finally {
