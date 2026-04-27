@@ -5,6 +5,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { LogoutButton } from '@/components/auth/logout-button';
 
 type Chat = {
   id: string;
@@ -85,6 +86,8 @@ export default function SidebarClient({ initialChats }: Props) {
       <Button onClick={() => router.push('/')} className="w-50">
         Back home
       </Button>
+
+      <LogoutButton />
 
       {chats.map((item) => (
         <Link
