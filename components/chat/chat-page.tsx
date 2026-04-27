@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import ChatInput from './chat-input';
 import Messages from './messages';
 import { useChat } from '@ai-sdk/react';
@@ -11,14 +11,16 @@ type Props = {
 };
 
 export default function ChatPage({ chatId }: Props) {
-  const { messages, setMessages, sendMessage } = useChat();
+  const { messages, setMessages, sendMessage } = useChat({
+    onFinish: () => {
+      // notice sidebar update chats data
+      window.dispatchEvent(new Event('chats:refresh'));
+    },
+  });
   const [input, setInput] = useState('');
-  const initializedRef = useRef(false);
 
   useEffect(() => {
-    if (initializedRef.current) return;
-    initializedRef.current = true;
-
+    let cancelled = false;
     async function loadMessages() {
       try {
         const res = await fetch(`/api/messages/${chatId}`);
@@ -29,6 +31,8 @@ export default function ChatPage({ chatId }: Props) {
         }
 
         const data = await res.json();
+
+        if (cancelled) return;
 
         const uiMessages = data.map((message: DbMessage) => ({
           id: message.id,
@@ -43,26 +47,26 @@ export default function ChatPage({ chatId }: Props) {
 
         setMessages(uiMessages);
 
-        const pendingMessage = sessionStorage.getItem(`chat:${chatId}:pending-message`);
+        if (cancelled) return;
 
-        if (pendingMessage) {
-          sessionStorage.removeItem(`chat:${chatId}:pending-message`);
+        // Send the pending first message from the home page, then clear it from sessionStorage.
+        const pendingMessageKey = `chat:${chatId}:pending-message`;
+        const pendingMessage = sessionStorage.getItem(pendingMessageKey);
 
-          sendMessage(
-            { text: pendingMessage },
-            {
-              body: {
-                chatId,
-              },
-            },
-          );
-        }
+        if (!pendingMessage) return;
+
+        sessionStorage.removeItem(pendingMessageKey);
+        sendMessage({ text: pendingMessage }, { body: { chatId } });
       } catch (error) {
         console.error('Load messages error:', error);
       }
     }
 
     loadMessages();
+
+    return () => {
+      cancelled = true;
+    };
   }, [chatId, setMessages, sendMessage]);
 
   const triggerSend = () => {
