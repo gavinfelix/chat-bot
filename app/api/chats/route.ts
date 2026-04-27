@@ -1,19 +1,29 @@
 import { db } from '@/db';
 import { chats } from '@/db/schema';
 import { NextResponse } from 'next/server';
-import { desc } from 'drizzle-orm';
+import { desc, eq } from 'drizzle-orm';
+import { getCurrentUser } from '@/lib/auth/get-current-user';
 
 export async function POST(req: Request) {
   try {
-    const { chatId, title } = await req.json();
+    const user = await getCurrentUser();
+
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { title } = await req.json();
 
     const [chat] = await db
       .insert(chats)
       .values({
-        id: chatId,
-        title,
+        userId: user.id,
+        title: title || 'New chat',
       })
-      .returning();
+      .returning({
+        id: chats.id,
+        title: chats.title,
+      });
 
     return NextResponse.json(chat, { status: 201 });
   } catch (error) {
@@ -25,7 +35,17 @@ export async function POST(req: Request) {
 
 export async function GET() {
   try {
-    const chatsData = await db.select().from(chats).orderBy(desc(chats.updatedAt));
+    const user = await getCurrentUser();
+
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const chatsData = await db
+      .select()
+      .from(chats)
+      .where(eq(chats.userId, user.id))
+      .orderBy(desc(chats.updatedAt));
 
     console.log('chats data: ', chatsData);
 

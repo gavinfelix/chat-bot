@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { db } from '@/db';
 import { messages } from '@/db/schema';
 import { asc, eq } from 'drizzle-orm';
+import { getCurrentUser } from '@/lib/auth/get-current-user';
 
 type Props = {
   params: Promise<{
@@ -11,6 +12,12 @@ type Props = {
 
 export async function GET(_req: Request, { params }: Props) {
   try {
+    const user = await getCurrentUser();
+
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const { chatId } = await params;
 
     if (!chatId) {
