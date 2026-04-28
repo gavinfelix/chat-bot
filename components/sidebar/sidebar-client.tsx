@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { LogoutButton } from '@/components/auth/logout-button';
 
@@ -18,8 +19,13 @@ type Props = {
 
 export default function SidebarClient({ initialChats }: Props) {
   const [chats, setChats] = useState<Chat[]>(initialChats);
+  const [openMenuChatId, setOpenMenuChatId] = useState<string | null>(null);
+  const [editingChatId, setEditingChatId] = useState<string | null>(null);
+  const [editingTitle, setEditingTitle] = useState('');
   const router = useRouter();
   const pathname = usePathname();
+  const editInputRef = useRef<HTMLInputElement | null>(null);
+  const sidebarRef = useRef<HTMLDivElement | null>(null);
 
   const currentChatId = pathname.startsWith('/chat/') ? pathname.split('/chat/')[1] : null;
 
@@ -48,6 +54,27 @@ export default function SidebarClient({ initialChats }: Props) {
       window.removeEventListener('chats:refresh', handleRefresh);
     };
   }, [refreshChats]);
+
+  useEffect(() => {
+    if (!editingChatId) return;
+
+    editInputRef.current?.focus();
+    editInputRef.current?.select();
+  }, [editingChatId]);
+
+  useEffect(() => {
+    const handlePointerDown = (event: MouseEvent) => {
+      if (!sidebarRef.current?.contains(event.target as Node)) {
+        setOpenMenuChatId(null);
+      }
+    };
+
+    document.addEventListener('mousedown', handlePointerDown);
+
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown);
+    };
+  }, []);
 
   const createNewChat = async () => {
     const res = await fetch('/api/chats', {
@@ -93,6 +120,30 @@ export default function SidebarClient({ initialChats }: Props) {
     );
   };
 
+  const startEditing = (chat: Chat) => {
+    setOpenMenuChatId(null);
+    setEditingChatId(chat.id);
+    setEditingTitle(chat.title);
+  };
+
+  const cancelEditing = () => {
+    setEditingChatId(null);
+    setEditingTitle('');
+  };
+
+  const saveEditing = async (chatId: string) => {
+    const nextTitle = editingTitle.trim();
+
+    if (!nextTitle) {
+      cancelEditing();
+      return;
+    }
+
+    await renameChat(chatId, nextTitle);
+    cancelEditing();
+    setOpenMenuChatId(null);
+  };
+
   const deleteChat = async (chatId: string) => {
     const confirmed = window.confirm('Delete this chat?');
 
@@ -107,6 +158,10 @@ export default function SidebarClient({ initialChats }: Props) {
       return;
     }
 
+    setOpenMenuChatId(null);
+    if (editingChatId === chatId) {
+      cancelEditing();
+    }
     setChats((prev) => prev.filter((chat) => chat.id !== chatId));
 
     if (window.location.pathname === `/chat/${chatId}`) {
@@ -115,7 +170,7 @@ export default function SidebarClient({ initialChats }: Props) {
   };
 
   return (
-    <div className="flex h-full w-full flex-col p-3">
+    <div className="flex h-full w-full flex-col p-3" ref={sidebarRef}>
       <div className="space-y-3 border-b border-zinc-200 pb-4">
         <button
           className="flex h-10 items-center rounded-xl px-3 text-left text-sm font-semibold text-zinc-900"
@@ -146,38 +201,84 @@ export default function SidebarClient({ initialChats }: Props) {
           Recent chats
         </div>
         {chats.map((chat) => (
-          <div className="mb-3 space-y-1.5" key={chat.id}>
-            <Link
-              href={`/chat/${chat.id}`}
-              className={cn(
-                'block rounded-xl px-3 py-2 text-sm transition-colors',
-                chat.id === currentChatId
-                  ? 'bg-zinc-900 text-white'
-                  : 'text-zinc-700 hover:bg-white',
-              )}
-            >
-              {chat.title}
-            </Link>
-            <div className="flex gap-2">
-              <button
-                className="text-xs text-zinc-500 hover:text-zinc-900"
-                onClick={() => {
-                  const title = window.prompt('New title', chat.title);
+          <div className="group relative mb-1" key={chat.id}>
+            {editingChatId === chat.id ? (
+              <Input
+                ref={editInputRef}
+                value={editingTitle}
+                onChange={(event) => setEditingTitle(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.nativeEvent.isComposing) {
+                    return;
+                  }
 
-                  if (!title) return;
+                  if (event.key === 'Enter') {
+                    event.preventDefault();
+                    void saveEditing(chat.id);
+                  }
 
-                  renameChat(chat.id, title);
+                  if (event.key === 'Escape') {
+                    event.preventDefault();
+                    cancelEditing();
+                  }
                 }}
-              >
-                Rename
-              </button>
-              <button
-                className="text-xs text-zinc-500 hover:text-zinc-900"
-                onClick={() => deleteChat(chat.id)}
-              >
-                Delete
-              </button>
-            </div>
+                onBlur={() => {
+                  void saveEditing(chat.id);
+                }}
+                className="h-10 rounded-xl border-zinc-300 bg-white text-sm shadow-none"
+              />
+            ) : (
+              <>
+                <Link
+                  href={`/chat/${chat.id}`}
+                  className={cn(
+                    'block rounded-xl px-3 py-2 pr-10 text-sm transition-colors',
+                    chat.id === currentChatId
+                      ? 'bg-zinc-900 text-white'
+                      : 'text-zinc-700 hover:bg-white',
+                  )}
+                >
+                  <span className="block truncate">{chat.title}</span>
+                </Link>
+                <button
+                  type="button"
+                  aria-label="Chat actions"
+                  className={cn(
+                    'absolute top-1/2 right-2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-md text-zinc-500 transition hover:bg-zinc-100 hover:text-zinc-900',
+                    openMenuChatId === chat.id
+                      ? 'opacity-100'
+                      : 'opacity-0 group-hover:opacity-100',
+                  )}
+                  onClick={(event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    cancelEditing();
+                    setOpenMenuChatId((prev) => (prev === chat.id ? null : chat.id));
+                  }}
+                >
+                  <span className="text-base leading-none">...</span>
+                </button>
+              </>
+            )}
+
+            {openMenuChatId === chat.id && editingChatId !== chat.id ? (
+              <div className="absolute top-11 right-2 z-10 min-w-28 rounded-xl border border-zinc-200 bg-white p-1 shadow-lg">
+                <button
+                  type="button"
+                  className="flex w-full rounded-lg px-3 py-2 text-left text-sm text-zinc-700 hover:bg-zinc-100"
+                  onClick={() => startEditing(chat)}
+                >
+                  Rename
+                </button>
+                <button
+                  type="button"
+                  className="flex w-full rounded-lg px-3 py-2 text-left text-sm text-red-600 hover:bg-zinc-100"
+                  onClick={() => void deleteChat(chat.id)}
+                >
+                  Delete
+                </button>
+              </div>
+            ) : null}
           </div>
         ))}
       </div>
