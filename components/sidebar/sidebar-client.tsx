@@ -115,31 +115,45 @@ export default function SidebarClient({ initialChats }: Props) {
   };
 
   return (
-    <div className="flex h-full w-full flex-col gap-4 p-4">
-      <div className="space-y-2">
-        <p className="text-sm font-medium text-zinc-600">Chats</p>
+    <div className="flex h-full w-full flex-col p-3">
+      <div className="space-y-3 border-b border-zinc-200 pb-4">
+        <button
+          className="flex h-10 items-center rounded-xl px-3 text-left text-sm font-semibold text-zinc-900"
+          onClick={() => router.push('/')}
+        >
+          Chat Bot
+        </button>
 
-        <Button onClick={createNewChat} className="w-full justify-start">
+        <Button
+          onClick={createNewChat}
+          variant="outline"
+          className="h-10 w-full justify-start rounded-xl border-zinc-200 bg-white"
+        >
           New chat
         </Button>
 
-        <Button onClick={() => router.push('/')} className="w-full justify-start">
-          Back home
+        <Button
+          onClick={() => router.push('/')}
+          variant="ghost"
+          className="h-9 w-full justify-start rounded-xl text-zinc-600"
+        >
+          Home
         </Button>
-
-        <LogoutButton />
       </div>
 
-      <div className="min-h-0 flex-1 space-y-3 overflow-y-auto">
+      <div className="min-h-0 flex-1 overflow-y-auto py-4">
+        <div className="mb-3 px-2 text-xs font-medium uppercase tracking-wide text-zinc-500">
+          Recent chats
+        </div>
         {chats.map((chat) => (
-          <div className="space-y-2" key={chat.id}>
+          <div className="mb-3 space-y-1.5" key={chat.id}>
             <Link
               href={`/chat/${chat.id}`}
               className={cn(
-                'block rounded-md px-3 py-2 text-sm transition-colors',
+                'block rounded-xl px-3 py-2 text-sm transition-colors',
                 chat.id === currentChatId
                   ? 'bg-zinc-900 text-white'
-                  : 'text-zinc-700 hover:bg-zinc-100',
+                  : 'text-zinc-700 hover:bg-white',
               )}
             >
               {chat.title}
@@ -166,6 +180,10 @@ export default function SidebarClient({ initialChats }: Props) {
             </div>
           </div>
         ))}
+      </div>
+
+      <div className="border-t border-zinc-200 pt-3">
+        <LogoutButton />
       </div>
     </div>
   );
