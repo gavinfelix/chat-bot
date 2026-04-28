@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/db';
-import { messages } from '@/db/schema';
-import { asc, eq } from 'drizzle-orm';
+import { messages, chats } from '@/db/schema';
+import { asc, eq, and } from 'drizzle-orm';
 import { getCurrentUser } from '@/lib/auth/get-current-user';
 
 type Props = {
@@ -22,6 +22,16 @@ export async function GET(_req: Request, { params }: Props) {
 
     if (!chatId) {
       return NextResponse.json({ error: 'chatId is required' }, { status: 400 });
+    }
+
+    const [chat] = await db
+      .select()
+      .from(chats)
+      .where(and(eq(chats.id, chatId), eq(chats.userId, user.id)))
+      .limit(1);
+
+    if (!chat) {
+      return NextResponse.json({ error: 'Chat not found' }, { status: 404 });
     }
 
     const data = await db
