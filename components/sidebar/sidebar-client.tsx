@@ -25,6 +25,7 @@ export default function SidebarClient({ initialChats }: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const editInputRef = useRef<HTMLInputElement | null>(null);
+  const sidebarRef = useRef<HTMLDivElement | null>(null);
 
   const currentChatId = pathname.startsWith('/chat/') ? pathname.split('/chat/')[1] : null;
 
@@ -60,6 +61,20 @@ export default function SidebarClient({ initialChats }: Props) {
     editInputRef.current?.focus();
     editInputRef.current?.select();
   }, [editingChatId]);
+
+  useEffect(() => {
+    const handlePointerDown = (event: MouseEvent) => {
+      if (!sidebarRef.current?.contains(event.target as Node)) {
+        setOpenMenuChatId(null);
+      }
+    };
+
+    document.addEventListener('mousedown', handlePointerDown);
+
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown);
+    };
+  }, []);
 
   const createNewChat = async () => {
     const res = await fetch('/api/chats', {
@@ -126,6 +141,7 @@ export default function SidebarClient({ initialChats }: Props) {
 
     await renameChat(chatId, nextTitle);
     cancelEditing();
+    setOpenMenuChatId(null);
   };
 
   const deleteChat = async (chatId: string) => {
@@ -143,6 +159,9 @@ export default function SidebarClient({ initialChats }: Props) {
     }
 
     setOpenMenuChatId(null);
+    if (editingChatId === chatId) {
+      cancelEditing();
+    }
     setChats((prev) => prev.filter((chat) => chat.id !== chatId));
 
     if (window.location.pathname === `/chat/${chatId}`) {
@@ -151,7 +170,7 @@ export default function SidebarClient({ initialChats }: Props) {
   };
 
   return (
-    <div className="flex h-full w-full flex-col p-3">
+    <div className="flex h-full w-full flex-col p-3" ref={sidebarRef}>
       <div className="space-y-3 border-b border-zinc-200 pb-4">
         <button
           className="flex h-10 items-center rounded-xl px-3 text-left text-sm font-semibold text-zinc-900"
@@ -189,6 +208,10 @@ export default function SidebarClient({ initialChats }: Props) {
                 value={editingTitle}
                 onChange={(event) => setEditingTitle(event.target.value)}
                 onKeyDown={(event) => {
+                  if (event.nativeEvent.isComposing) {
+                    return;
+                  }
+
                   if (event.key === 'Enter') {
                     event.preventDefault();
                     void saveEditing(chat.id);
@@ -229,6 +252,7 @@ export default function SidebarClient({ initialChats }: Props) {
                   onClick={(event) => {
                     event.preventDefault();
                     event.stopPropagation();
+                    cancelEditing();
                     setOpenMenuChatId((prev) => (prev === chat.id ? null : chat.id));
                   }}
                 >

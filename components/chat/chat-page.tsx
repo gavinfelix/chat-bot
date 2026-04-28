@@ -87,12 +87,16 @@ export default function ChatPage({ chatId }: Props) {
   };
 
   return (
-    <div className="flex h-full min-w-0 flex-1 flex-col bg-white">
-      <header className="flex h-14 items-center px-6">
-        <h1 className="text-sm font-medium text-zinc-900">Chat</h1>
+    <div className="relative flex h-full min-w-0 flex-1 flex-col bg-white">
+      <header className="pointer-events-none absolute inset-x-0 top-0 z-10">
+        <div className="absolute inset-x-0 top-0 flex h-12 items-center px-6">
+          <h1 className="pointer-events-auto select-text text-sm font-medium text-zinc-700">
+            Chat
+          </h1>
+        </div>
       </header>
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-6 py-6">
+      <div className="min-h-0 flex-1 overflow-y-auto px-6 pt-14 pb-6">
         <Messages messages={messages} />
       </div>
 
