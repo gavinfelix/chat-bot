@@ -8,10 +8,20 @@ type Params = {
   params: Promise<{ chatId: string }>;
 };
 
-export async function GET(_req: Request, ctx: RouteContext<'/api/chats/[chatId]'>) {
+export async function GET(_req: Request, { params }: Params) {
   try {
-    const { chatId } = await ctx.params;
-    const [chat] = await db.select().from(chats).where(eq(chats.id, chatId)).limit(1);
+    const user = await getCurrentUser();
+
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { chatId } = await params;
+    const [chat] = await db
+      .select()
+      .from(chats)
+      .where(and(eq(chats.id, chatId), eq(chats.userId, user.id)))
+      .limit(1);
 
     if (!chat) {
       return NextResponse.json({ error: 'Chat not found' }, { status: 404 });
@@ -19,7 +29,7 @@ export async function GET(_req: Request, ctx: RouteContext<'/api/chats/[chatId]'
 
     return NextResponse.json(chat, { status: 200 });
   } catch (error) {
-    console.log('GET /api/chats/[chatId] failed:', error);
+    console.error('GET /api/chats/[chatId] failed:', error);
 
     return NextResponse.json({ error: 'Failed to get chat' }, { status: 500 });
   }

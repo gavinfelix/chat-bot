@@ -13,6 +13,10 @@ export async function POST(req: Request) {
     }
     const { messages, chatId }: { messages: UIMessage[]; chatId: string } = await req.json();
 
+    if (!chatId) {
+      return new Response('chatId is required', { status: 400 });
+    }
+
     const userMessage = messages[messages.length - 1];
     if (!userMessage || userMessage.role !== 'user') {
       return new Response('Invalid user message', { status: 400 });
@@ -35,6 +39,9 @@ export async function POST(req: Request) {
       .map((part) => part.text)
       .join('');
 
+    if (!userMessageContent.trim()) {
+      return new Response('Message content is required', { status: 400 });
+    }
     await db.insert(messagesTable).values({
       chatId,
       role: 'user',
@@ -58,6 +65,7 @@ export async function POST(req: Request) {
       messages: await convertToModelMessages(messages),
     });
 
+    // send message to AI
     return result.toUIMessageStreamResponse({
       originalMessages: messages,
       generateMessageId: createIdGenerator({
