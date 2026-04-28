@@ -9,7 +9,7 @@ type Props = {
 
 export default function ChatInput({ sendMessage, input, setInput }: Props) {
   return (
-    <div className="mx-auto flex w-full max-w-3xl items-end gap-3 rounded-[28px] border border-zinc-200 bg-white p-3 shadow-sm">
+    <div className="pointer-events-auto mx-auto flex w-full max-w-3xl items-end gap-3 rounded-[28px] border border-zinc-200 bg-white p-3 shadow-sm">
       <Input
         value={input}
         onChange={(e) => setInput(e.target.value)}

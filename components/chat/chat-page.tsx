@@ -13,7 +13,6 @@ type Props = {
 export default function ChatPage({ chatId }: Props) {
   const { messages, setMessages, sendMessage } = useChat({
     onFinish: () => {
-      // notice sidebar update chats data
       window.dispatchEvent(new Event('chats:refresh'));
     },
   });
@@ -49,7 +48,6 @@ export default function ChatPage({ chatId }: Props) {
 
         if (cancelled) return;
 
-        // Send the pending first message from the home page, then clear it from sessionStorage.
         const pendingMessageKey = `chat:${chatId}:pending-message`;
         const pendingMessage = sessionStorage.getItem(pendingMessageKey);
 
@@ -87,21 +85,33 @@ export default function ChatPage({ chatId }: Props) {
   };
 
   return (
-    <div className="relative flex h-full min-w-0 flex-1 flex-col bg-white">
-      <header className="pointer-events-none absolute inset-x-0 top-0 z-10">
-        <div className="absolute inset-x-0 top-0 flex h-12 items-center px-6">
-          <h1 className="pointer-events-auto select-text text-sm font-medium text-zinc-700">
-            Chat
-          </h1>
-        </div>
+    <div className="h-full min-w-0 flex-1 overflow-y-auto bg-white">
+      <header className="pointer-events-none sticky top-0 z-10 flex h-12 items-center justify-between px-6">
+        <h1 className="pointer-events-auto select-text text-sm font-medium text-zinc-700">Chat</h1>
+        <button
+          type="button"
+          aria-label="More actions"
+          className="pointer-events-auto flex h-8 w-8 items-center justify-center rounded-full text-zinc-500 transition hover:bg-zinc-100 hover:text-zinc-900"
+        >
+          <span className="text-base leading-none">...</span>
+        </button>
       </header>
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-6 pt-14 pb-6">
+      <div className="px-6 pt-2 pb-10">
         <Messages messages={messages} />
       </div>
 
-      <div className="bg-white px-6 py-4">
-        <ChatInput sendMessage={triggerSend} input={input} setInput={setInput} />
+      <div className="pointer-events-none sticky bottom-0 z-10 mt-6">
+        <div className="h-28 bg-gradient-to-t from-white via-white/95 to-transparent" />
+        <div className="absolute inset-x-0 bottom-0 h-24 bg-white" />
+        <div className="absolute inset-x-0 bottom-10 px-6">
+          <ChatInput sendMessage={triggerSend} input={input} setInput={setInput} />
+        </div>
+        <div className="absolute inset-x-0 bottom-3 flex justify-center px-6">
+          <p className="text-center text-xs text-zinc-500">
+            Chat Bot can make mistakes. Check important info.
+          </p>
+        </div>
       </div>
     </div>
   );
