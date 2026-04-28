@@ -47,12 +47,12 @@ export default function Home() {
 
   return (
     <div className="flex h-full min-w-0 flex-1 flex-col bg-white">
-      <header className="flex h-14 items-center justify-between border-b border-zinc-200 px-6">
+      <header className="flex h-14 items-center justify-between px-6">
         <div className="text-sm font-medium text-zinc-900">Chat Bot</div>
         <div className="text-xs text-zinc-500">New conversation</div>
       </header>
 
-      <div className="flex min-h-0 flex-1 items-center justify-center px-6">
+      <div className="flex flex-1 items-center justify-center px-6 pb-14">
         <div className="flex w-full max-w-3xl flex-col items-center text-center">
           <div className="space-y-3">
             <h1 className="text-3xl font-semibold tracking-tight text-zinc-950 sm:text-4xl">
