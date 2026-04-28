@@ -115,48 +115,58 @@ export default function SidebarClient({ initialChats }: Props) {
   };
 
   return (
-    <div className="flex w-100 flex-col">
-      <p>menu</p>
+    <div className="flex h-full w-full flex-col gap-4 p-4">
+      <div className="space-y-2">
+        <p className="text-sm font-medium text-zinc-600">Chats</p>
 
-      <Button onClick={createNewChat} className="w-50">
-        New chat
-      </Button>
+        <Button onClick={createNewChat} className="w-full justify-start">
+          New chat
+        </Button>
 
-      <Button onClick={() => router.push('/')} className="w-50">
-        Back home
-      </Button>
+        <Button onClick={() => router.push('/')} className="w-full justify-start">
+          Back home
+        </Button>
 
-      <LogoutButton />
+        <LogoutButton />
+      </div>
 
-      {chats.map((chat) => (
-        <>
-          <Link
-            href={`/chat/${chat.id}`}
-            className={cn(
-              'rounded-md px-3 py-2 text-sm transition-colors',
-              chat.id === currentChatId
-                ? 'bg-zinc-900 text-white'
-                : 'text-zinc-700 hover:bg-zinc-100',
-            )}
-            key={chat.id}
-          >
-            {chat.title}
-          </Link>
-          <button
-            onClick={() => {
-              const title = window.prompt('New title', chat.title);
+      <div className="min-h-0 flex-1 space-y-3 overflow-y-auto">
+        {chats.map((chat) => (
+          <div className="space-y-2" key={chat.id}>
+            <Link
+              href={`/chat/${chat.id}`}
+              className={cn(
+                'block rounded-md px-3 py-2 text-sm transition-colors',
+                chat.id === currentChatId
+                  ? 'bg-zinc-900 text-white'
+                  : 'text-zinc-700 hover:bg-zinc-100',
+              )}
+            >
+              {chat.title}
+            </Link>
+            <div className="flex gap-2">
+              <button
+                className="text-xs text-zinc-500 hover:text-zinc-900"
+                onClick={() => {
+                  const title = window.prompt('New title', chat.title);
 
-              if (!title) return;
+                  if (!title) return;
 
-              renameChat(chat.id, title);
-            }}
-          >
-            Rename
-          </button>
-
-          <button onClick={() => deleteChat(chat.id)}>Delete</button>
-        </>
-      ))}
+                  renameChat(chat.id, title);
+                }}
+              >
+                Rename
+              </button>
+              <button
+                className="text-xs text-zinc-500 hover:text-zinc-900"
+                onClick={() => deleteChat(chat.id)}
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

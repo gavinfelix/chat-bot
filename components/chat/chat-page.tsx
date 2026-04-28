@@ -87,10 +87,18 @@ export default function ChatPage({ chatId }: Props) {
   };
 
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <Messages messages={messages} />
+    <div className="flex h-full min-w-0 flex-1 flex-col bg-white">
+      <header className="border-b border-zinc-200 px-6 py-4">
+        <h1 className="text-sm font-medium text-zinc-900">Chat</h1>
+      </header>
 
-      <ChatInput sendMessage={triggerSend} input={input} setInput={setInput} />
+      <div className="min-h-0 flex-1 overflow-y-auto px-6 py-6">
+        <Messages messages={messages} />
+      </div>
+
+      <div className="border-t border-zinc-200 px-6 py-4">
+        <ChatInput sendMessage={triggerSend} input={input} setInput={setInput} />
+      </div>
     </div>
   );
 }
