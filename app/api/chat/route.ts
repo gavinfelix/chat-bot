@@ -6,6 +6,7 @@ import { getCurrentUser } from '@/lib/auth/get-current-user';
 
 export async function POST(req: Request) {
   try {
+    // All chat writes are user-scoped, so authenticate first.
     const user = await getCurrentUser();
 
     if (!user) {
@@ -22,7 +23,7 @@ export async function POST(req: Request) {
       return new Response('Invalid user message', { status: 400 });
     }
 
-    // check whether the chat's owner is the current user
+    // Refuse the request if the target chat does not belong to the current user.
     const [chat] = await db
       .select({ id: chatsTable.id })
       .from(chatsTable)
@@ -33,7 +34,7 @@ export async function POST(req: Request) {
       return new Response('Chat not found', { status: 404 });
     }
 
-    // Insert the message sent by the user into the database
+    // Persist the latest user message before starting the model stream.
     const userMessageContent = userMessage.parts
       .filter((part) => part.type === 'text')
       .map((part) => part.text)
@@ -48,7 +49,7 @@ export async function POST(req: Request) {
       content: userMessageContent,
     });
 
-    // Update updatedAt after the user message is inserted
+    // Keep the chat list fresh, and use the first user message as a simple title seed.
     const isFirstMessage = messages.length === 1;
 
     const title = userMessageContent.slice(0, 20) || 'New chat';
@@ -65,7 +66,8 @@ export async function POST(req: Request) {
       messages: await convertToModelMessages(messages),
     });
 
-    // send message to AI
+    // Stream the assistant response back to the client, then persist the final assistant
+    // message once generation has finished so we do not store partial output.
     return result.toUIMessageStreamResponse({
       originalMessages: messages,
       generateMessageId: createIdGenerator({
@@ -78,6 +80,7 @@ export async function POST(req: Request) {
 
           if (lastMessage?.role !== 'assistant') return;
 
+          // Flatten text parts because the current database schema stores plain text only.
           const content = lastMessage.parts
             .filter((part) => part.type === 'text')
             .map((part) => part.text)
