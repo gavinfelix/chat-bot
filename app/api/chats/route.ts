@@ -6,14 +6,19 @@ import { getCurrentUser } from '@/lib/auth/get-current-user';
 
 export async function POST(req: Request) {
   try {
+    // Creating a chat is user-scoped, so reject anonymous requests early.
     const user = await getCurrentUser();
 
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Accept optional title from the client; fallback keeps UX predictable when
+    // a brand-new chat is created before any message exists.
     const { title } = await req.json();
 
+    // Seed the chat with a simple title. It can be replaced later by the first
+    // user message or by an explicit rename action.
     const [chat] = await db
       .insert(chats)
       .values({
@@ -35,12 +40,15 @@ export async function POST(req: Request) {
 
 export async function GET() {
   try {
+    // The sidebar should only ever list chats owned by the current user.
     const user = await getCurrentUser();
 
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Return the most recently updated chats first so the sidebar feels fresh.
+    // This ordering is coupled with updatedAt writes in /api/chat and PATCH.
     const chatsData = await db
       .select()
       .from(chats)
