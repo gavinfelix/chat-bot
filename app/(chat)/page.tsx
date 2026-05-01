@@ -10,6 +10,7 @@ export default function Home() {
   const [loading, setLoading] = useState<boolean>(false);
   const router = useRouter();
 
+  // After creating a new chat, store the first message before opening the chat page.
   const createNewChat = async () => {
     const message = input.trim();
     if (loading || input.trim() === '') return;
