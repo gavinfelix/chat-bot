@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import ThemeProvider from "@/components/theme/theme-provider";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -20,9 +21,9 @@ export const metadata: Metadata = {
 const themeScript = `
   (() => {
     try {
-      const theme = localStorage.getItem('theme');
+      const theme = localStorage.getItem('theme') || 'system';
       const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      const useDark = theme ? theme === 'dark' : prefersDark;
+      const useDark = theme === 'dark' || (theme === 'system' && prefersDark);
 
       document.documentElement.classList.toggle('dark', useDark);
     } catch {
@@ -43,6 +44,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+        <ThemeProvider />
         {children}
       </body>
     </html>

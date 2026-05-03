@@ -1,40 +1,15 @@
 'use client';
 
-import { useState, useSyncExternalStore } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useRouter } from 'next/navigation';
-import { Moon, Sun } from 'lucide-react';
-
-type Theme = 'light' | 'dark';
-
-const getTheme = (): Theme => {
-  if (typeof document === 'undefined') return 'light';
-
-  return document.documentElement.classList.contains('dark') ? 'dark' : 'light';
-};
-
-const subscribeTheme = (onStoreChange: () => void) => {
-  window.addEventListener('themechange', onStoreChange);
-
-  return () => {
-    window.removeEventListener('themechange', onStoreChange);
-  };
-};
+import ThemeSelector from '@/components/theme/theme-selector';
 
 export default function Home() {
   const [input, setInput] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
-  const theme = useSyncExternalStore(subscribeTheme, getTheme, () => 'light');
   const router = useRouter();
-
-  const toggleTheme = () => {
-    const nextTheme: Theme = theme === 'dark' ? 'light' : 'dark';
-
-    document.documentElement.classList.toggle('dark', nextTheme === 'dark');
-    localStorage.setItem('theme', nextTheme);
-    window.dispatchEvent(new Event('themechange'));
-  };
 
   // After creating a new chat, store the first message before opening the chat page.
   const createNewChat = async () => {
@@ -78,17 +53,7 @@ export default function Home() {
         <div className="text-sm font-medium">Chat Bot</div>
         <div className="flex items-center gap-3">
           <div className="text-xs text-muted-foreground">New conversation</div>
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-            title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-            onClick={toggleTheme}
-            className="rounded-full"
-          >
-            {theme === 'dark' ? <Sun /> : <Moon />}
-          </Button>
+          <ThemeSelector />
         </div>
       </header>
 
