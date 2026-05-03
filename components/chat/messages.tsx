@@ -7,7 +7,7 @@ export default function Messages({ messages }: { messages: UIMessage[] }) {
         message.role === 'user' ? (
           <div className="flex justify-end" key={message.id}>
             <div
-              className="max-w-[80%] rounded-3xl bg-zinc-900 px-4 py-3 text-sm text-white"
+              className="max-w-[80%] rounded-3xl bg-primary px-4 py-3 text-sm text-primary-foreground"
               key={`${message.id}`}
             >
               {message.parts.map((part, i) => {
@@ -21,7 +21,7 @@ export default function Messages({ messages }: { messages: UIMessage[] }) {
         ) : (
           <div className="flex" key={message.id}>
             <div
-              className="max-w-[80%] rounded-3xl bg-zinc-100 px-4 py-3 text-sm text-zinc-900"
+              className="max-w-[80%] rounded-3xl bg-muted px-4 py-3 text-sm text-foreground"
               key={`${message.id}`}
             >
               {message.parts.map((part, i) => {

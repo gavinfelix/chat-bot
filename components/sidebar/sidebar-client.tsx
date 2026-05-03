@@ -171,9 +171,9 @@ export default function SidebarClient({ initialChats }: Props) {
 
   return (
     <div className="flex h-full w-full flex-col p-3" ref={sidebarRef}>
-      <div className="space-y-3 border-b border-zinc-200 pb-4">
+      <div className="space-y-3 border-b border-border pb-4">
         <button
-          className="flex h-10 items-center rounded-xl px-3 text-left text-sm font-semibold text-zinc-900"
+          className="flex h-10 items-center rounded-xl px-3 text-left text-sm font-semibold text-foreground"
           onClick={() => router.push('/')}
         >
           Chat Bot
@@ -182,7 +182,7 @@ export default function SidebarClient({ initialChats }: Props) {
         <Button
           onClick={createNewChat}
           variant="outline"
-          className="h-10 w-full justify-start rounded-xl border-zinc-200 bg-white"
+          className="h-10 w-full justify-start rounded-xl"
         >
           New chat
         </Button>
@@ -190,14 +190,14 @@ export default function SidebarClient({ initialChats }: Props) {
         <Button
           onClick={() => router.push('/')}
           variant="ghost"
-          className="h-9 w-full justify-start rounded-xl text-zinc-600"
+          className="h-9 w-full justify-start rounded-xl text-muted-foreground"
         >
           Home
         </Button>
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto py-4">
-        <div className="mb-3 px-2 text-xs font-medium uppercase tracking-wide text-zinc-500">
+        <div className="mb-3 px-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
           Recent chats
         </div>
         {chats.map((chat) => (
@@ -225,7 +225,7 @@ export default function SidebarClient({ initialChats }: Props) {
                 onBlur={() => {
                   void saveEditing(chat.id);
                 }}
-                className="h-10 rounded-xl border-zinc-300 bg-white text-sm shadow-none"
+                className="h-10 rounded-xl text-sm shadow-none"
               />
             ) : (
               <>
@@ -234,8 +234,8 @@ export default function SidebarClient({ initialChats }: Props) {
                   className={cn(
                     'block rounded-xl px-3 py-2 pr-10 text-sm transition-colors',
                     chat.id === currentChatId
-                      ? 'bg-zinc-900 text-white'
-                      : 'text-zinc-700 hover:bg-white',
+                      ? 'bg-primary text-primary-foreground'
+                      : 'text-muted-foreground hover:bg-background hover:text-foreground',
                   )}
                 >
                   <span className="block truncate">{chat.title}</span>
@@ -244,7 +244,7 @@ export default function SidebarClient({ initialChats }: Props) {
                   type="button"
                   aria-label="Chat actions"
                   className={cn(
-                    'absolute top-1/2 right-2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-md text-zinc-500 transition hover:bg-zinc-100 hover:text-zinc-900',
+                    'absolute top-1/2 right-2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground transition hover:bg-muted hover:text-foreground',
                     openMenuChatId === chat.id
                       ? 'opacity-100'
                       : 'opacity-0 group-hover:opacity-100',
@@ -262,17 +262,17 @@ export default function SidebarClient({ initialChats }: Props) {
             )}
 
             {openMenuChatId === chat.id && editingChatId !== chat.id ? (
-              <div className="absolute top-11 right-2 z-10 min-w-28 rounded-xl border border-zinc-200 bg-white p-1 shadow-lg">
+              <div className="absolute top-11 right-2 z-10 min-w-28 rounded-xl border border-border bg-popover p-1 text-popover-foreground shadow-lg">
                 <button
                   type="button"
-                  className="flex w-full rounded-lg px-3 py-2 text-left text-sm text-zinc-700 hover:bg-zinc-100"
+                  className="flex w-full rounded-lg px-3 py-2 text-left text-sm hover:bg-muted"
                   onClick={() => startEditing(chat)}
                 >
                   Rename
                 </button>
                 <button
                   type="button"
-                  className="flex w-full rounded-lg px-3 py-2 text-left text-sm text-red-600 hover:bg-zinc-100"
+                  className="flex w-full rounded-lg px-3 py-2 text-left text-sm text-destructive hover:bg-muted"
                   onClick={() => void deleteChat(chat.id)}
                 >
                   Delete
@@ -283,7 +283,7 @@ export default function SidebarClient({ initialChats }: Props) {
         ))}
       </div>
 
-      <div className="border-t border-zinc-200 pt-3">
+      <div className="border-t border-border pt-3">
         <LogoutButton />
       </div>
     </div>

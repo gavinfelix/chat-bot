@@ -1,14 +1,40 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useSyncExternalStore } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useRouter } from 'next/navigation';
+import { Moon, Sun } from 'lucide-react';
+
+type Theme = 'light' | 'dark';
+
+const getTheme = (): Theme => {
+  if (typeof document === 'undefined') return 'light';
+
+  return document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+};
+
+const subscribeTheme = (onStoreChange: () => void) => {
+  window.addEventListener('themechange', onStoreChange);
+
+  return () => {
+    window.removeEventListener('themechange', onStoreChange);
+  };
+};
 
 export default function Home() {
   const [input, setInput] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
+  const theme = useSyncExternalStore(subscribeTheme, getTheme, () => 'light');
   const router = useRouter();
+
+  const toggleTheme = () => {
+    const nextTheme: Theme = theme === 'dark' ? 'light' : 'dark';
+
+    document.documentElement.classList.toggle('dark', nextTheme === 'dark');
+    localStorage.setItem('theme', nextTheme);
+    window.dispatchEvent(new Event('themechange'));
+  };
 
   // After creating a new chat, store the first message before opening the chat page.
   const createNewChat = async () => {
@@ -47,46 +73,59 @@ export default function Home() {
   };
 
   return (
-    <div className="flex h-full min-w-0 flex-1 flex-col bg-white">
+    <div className="flex h-full min-w-0 flex-1 flex-col bg-background text-foreground transition-colors">
       <header className="flex h-14 items-center justify-between px-6">
-        <div className="text-sm font-medium text-zinc-900">Chat Bot</div>
-        <div className="text-xs text-zinc-500">New conversation</div>
+        <div className="text-sm font-medium">Chat Bot</div>
+        <div className="flex items-center gap-3">
+          <div className="text-xs text-muted-foreground">New conversation</div>
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            onClick={toggleTheme}
+            className="rounded-full"
+          >
+            {theme === 'dark' ? <Sun /> : <Moon />}
+          </Button>
+        </div>
       </header>
 
       <div className="flex flex-1 items-center justify-center px-6 pb-14">
         <div className="flex w-full max-w-3xl flex-col items-center text-center">
           <div className="space-y-3">
-            <h1 className="text-3xl font-semibold tracking-tight text-zinc-950 sm:text-4xl">
+            <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
               What&apos;s on your mind today?
             </h1>
           </div>
 
-          <div className="mt-10 w-full rounded-[28px] border border-zinc-200 bg-white p-4 shadow-sm">
+          <div className="mt-10 w-full rounded-[28px] border border-border bg-card p-4 shadow-sm">
             <div className="flex flex-col gap-3">
               <Input
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 placeholder="Ask anything"
-                className="h-12 border-0 px-0 text-base shadow-none focus-visible:ring-0"
+                className="h-12 border-0 bg-transparent px-0 text-base shadow-none focus-visible:ring-0"
               />
 
               <div className="flex items-center justify-between gap-3">
                 <div className="flex flex-wrap gap-2">
                   <button
                     type="button"
-                    className="rounded-full border border-zinc-200 px-3 py-1 text-xs text-zinc-600"
+                    className="rounded-full border border-border px-3 py-1 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                   >
                     Create an idea
                   </button>
                   <button
                     type="button"
-                    className="rounded-full border border-zinc-200 px-3 py-1 text-xs text-zinc-600"
+                    className="rounded-full border border-border px-3 py-1 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                   >
                     Draft a reply
                   </button>
                   <button
                     type="button"
-                    className="rounded-full border border-zinc-200 px-3 py-1 text-xs text-zinc-600"
+                    className="rounded-full border border-border px-3 py-1 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                   >
                     Explore a topic
                   </button>
