@@ -10,6 +10,7 @@ export const getThemeMode = (): ThemeMode => {
 
   const storedTheme = localStorage.getItem(THEME_STORAGE_KEY);
 
+  // Fall back to system mode when the saved value is missing or from an older build.
   return themeModes.has(storedTheme as ThemeMode) ? (storedTheme as ThemeMode) : 'system';
 };
 
@@ -20,6 +21,7 @@ export const getSystemTheme = (): ResolvedTheme => {
 };
 
 export const resolveThemeMode = (mode: ThemeMode): ResolvedTheme => {
+  // The UI stores "system" as a mode, but Tailwind only needs a resolved light/dark class.
   return mode === 'system' ? getSystemTheme() : mode;
 };
 
@@ -39,6 +41,7 @@ export const getThemeSnapshot = () => {
   const mode = getThemeMode();
   const resolvedTheme = resolveThemeMode(mode);
 
+  // Include both values so system preference changes re-render the selector in system mode.
   return `${mode}:${resolvedTheme}`;
 };
 
