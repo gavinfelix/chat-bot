@@ -12,12 +12,14 @@ export default function ThemeProvider() {
     };
 
     const handleSystemThemeChange = () => {
+      // Manual light/dark choices intentionally ignore operating-system changes.
       if (getThemeMode() !== 'system') return;
 
       applyStoredTheme();
       window.dispatchEvent(new Event('themechange'));
     };
 
+    // Keep the html.dark class in sync after hydration and across tabs.
     applyStoredTheme();
     window.addEventListener('themechange', applyStoredTheme);
     window.addEventListener('storage', applyStoredTheme);
