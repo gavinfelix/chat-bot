@@ -22,6 +22,7 @@ const themeOptions: Array<{
 
 export default function ThemeSelector() {
   const snapshot = useSyncExternalStore(subscribeTheme, getThemeSnapshot, () => 'system:light');
+  // The first part controls the selected segment; the second part forces system updates to re-render.
   const themeMode = snapshot.split(':')[0] as ThemeMode;
 
   return (
