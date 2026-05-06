@@ -21,6 +21,7 @@ export const metadata: Metadata = {
 const themeScript = `
   (() => {
     try {
+      // Apply the saved theme before React hydrates to avoid a light/dark flash.
       const theme = localStorage.getItem('theme') || 'system';
       const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
       const useDark = theme === 'dark' || (theme === 'system' && prefersDark);
