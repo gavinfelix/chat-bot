@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { ChevronDown, Ellipsis, PanelLeft, SquarePen } from 'lucide-react';
+import { Brain, ChevronDown, Ellipsis, PanelLeft, SquarePen } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client';
@@ -34,24 +34,9 @@ const CHAT_MENU_HEIGHT = 350;
 const CHAT_MENU_GAP = 8;
 const VIEWPORT_PADDING = 12;
 
-function ChatGPTMark({ className }: { className?: string }) {
+function AppMark({ className }: { className?: string }) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
-      <path
-        d="M12 3.2c1.45-1.05 3.55-.62 4.43.9.42.73.51 1.55.31 2.29 1.78.2 3.16 1.78 3.16 3.6 0 .84-.29 1.61-.78 2.22 1.05 1.45.62 3.55-.9 4.43-.73.42-1.55.51-2.29.31-.2 1.78-1.78 3.16-3.6 3.16-.84 0-1.61-.29-2.22-.78-1.45 1.05-3.55.62-4.43-.9-.42-.73-.51-1.55-.31-2.29-1.78-.2-3.16-1.78-3.16-3.6 0-.84.29-1.61.78-2.22-1.05-1.45-.62-3.55.9-4.43.73-.42 1.55-.51 2.29-.31.2-1.78 1.78-3.16 3.6-3.16.84 0 1.61.29 2.22.78Z"
-        className="stroke-foreground"
-        strokeWidth="1.7"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path
-        d="m8.25 8.1 3.75-2.17 3.75 2.17v4.34L12 14.6l-3.75-2.16V8.1Zm0 0L12 10.27m3.75-2.17L12 10.27m0 4.33v-4.33"
-        className="stroke-foreground"
-        strokeWidth="1.7"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
+    <Brain className={className} aria-hidden="true" />
   );
 }
 
@@ -325,7 +310,7 @@ export default function SidebarClient({ initialChats, user }: Props) {
               className="flex h-10 w-full items-center justify-start rounded-xl px-2 text-foreground transition-colors hover:bg-muted"
               onClick={toggleSidebar}
             >
-              <ChatGPTMark className="h-5 w-5 shrink-0" />
+              <AppMark className="h-5 w-5 shrink-0" />
             </button>
 
             <SidebarNavButton
