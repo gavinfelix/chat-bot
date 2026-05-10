@@ -3,30 +3,15 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
-import {
-  ChevronDown,
-  ChevronRight,
-  CircleUserRound,
-  Ellipsis,
-  Archive,
-  Folder,
-  LifeBuoy,
-  LogOut,
-  PanelLeft,
-  Pencil,
-  Pin,
-  Settings,
-  Share,
-  SlidersHorizontal,
-  SquarePen,
-  Sparkles,
-  Trash2,
-  UserPlus,
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { ChevronDown, Ellipsis, PanelLeft, SquarePen } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client';
+import ChatActionsMenu from './chat-actions-menu';
+import SidebarNavButton from './sidebar-nav-button';
+import UserAvatar from './user-avatar';
+import UserMenu from './user-menu';
+import useFloatingMenuPosition from './use-floating-menu-position';
 
 type Chat = {
   id: string;
@@ -88,6 +73,12 @@ export default function SidebarClient({ initialChats, user }: Props) {
   const sidebarRef = useRef<HTMLDivElement | null>(null);
   const chatMenuRef = useRef<HTMLDivElement | null>(null);
   const userMenuRef = useRef<HTMLDivElement | null>(null);
+  const getChatMenuPosition = useFloatingMenuPosition({
+    gap: CHAT_MENU_GAP,
+    height: CHAT_MENU_HEIGHT,
+    padding: VIEWPORT_PADDING,
+    width: CHAT_MENU_WIDTH,
+  });
 
   const currentChatId = pathname.startsWith('/chat/') ? pathname.split('/chat/')[1] : null;
   const isHomePage = pathname === '/';
@@ -254,87 +245,6 @@ export default function SidebarClient({ initialChats, user }: Props) {
     router.refresh();
   };
 
-  const renderUserSummary = () => (
-    <>
-      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-orange-500 text-[10px] font-semibold text-white">
-        {user.initials}
-      </div>
-      <div className="min-w-0 flex-1 text-left">
-        <div className="truncate text-sm leading-5 font-medium text-foreground">{user.name}</div>
-        <div className="truncate text-xs leading-4 text-muted-foreground">{user.planLabel}</div>
-      </div>
-    </>
-  );
-
-  const renderUserMenu = (className: string) => (
-    <div
-      ref={userMenuRef}
-      className={cn(
-        'z-50 rounded-2xl border border-border bg-popover p-3 text-popover-foreground shadow-xl',
-        className,
-      )}
-    >
-      <div className="flex h-14 items-center gap-3 rounded-xl px-2">
-        {renderUserSummary()}
-        <ChevronRight className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
-      </div>
-
-      <div className="my-3 h-px bg-border" />
-
-      <div className="space-y-1">
-        <button
-          type="button"
-          className="flex h-10 w-full items-center gap-3 rounded-xl px-3 text-left text-sm hover:bg-muted"
-        >
-          <Sparkles className="h-5 w-5" aria-hidden="true" />
-          <span className="min-w-0 flex-1 truncate">Upgrade plan</span>
-        </button>
-        <button
-          type="button"
-          className="flex h-10 w-full items-center gap-3 rounded-xl px-3 text-left text-sm hover:bg-muted"
-        >
-          <SlidersHorizontal className="h-5 w-5" aria-hidden="true" />
-          <span className="min-w-0 flex-1 truncate">Personalization</span>
-        </button>
-        <button
-          type="button"
-          className="flex h-10 w-full items-center gap-3 rounded-xl px-3 text-left text-sm hover:bg-muted"
-        >
-          <CircleUserRound className="h-5 w-5" aria-hidden="true" />
-          <span className="min-w-0 flex-1 truncate">Profile</span>
-        </button>
-        <button
-          type="button"
-          className="flex h-10 w-full items-center gap-3 rounded-xl px-3 text-left text-sm hover:bg-muted"
-        >
-          <Settings className="h-5 w-5" aria-hidden="true" />
-          <span className="min-w-0 flex-1 truncate">Settings</span>
-        </button>
-      </div>
-
-      <div className="my-3 h-px bg-border" />
-
-      <div className="space-y-1">
-        <button
-          type="button"
-          className="flex h-10 w-full items-center gap-3 rounded-xl px-3 text-left text-sm hover:bg-muted"
-        >
-          <LifeBuoy className="h-5 w-5" aria-hidden="true" />
-          <span className="min-w-0 flex-1 truncate">Help</span>
-          <ChevronRight className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-        </button>
-        <button
-          type="button"
-          className="flex h-10 w-full items-center gap-3 rounded-xl px-3 text-left text-sm hover:bg-muted"
-          onClick={() => void handleLogout()}
-        >
-          <LogOut className="h-5 w-5" aria-hidden="true" />
-          <span className="min-w-0 flex-1 truncate">Log out</span>
-        </button>
-      </div>
-    </div>
-  );
-
   const toggleSidebar = () => {
     setOpenMenuChatId(null);
     setChatMenuPosition(null);
@@ -363,33 +273,36 @@ export default function SidebarClient({ initialChats, user }: Props) {
               <ChatGPTMark className="h-5 w-5 shrink-0" />
             </button>
 
-            <button
-              type="button"
-              aria-label="New chat"
-              className={cn(
-                'flex h-10 w-10 items-center justify-center rounded-xl text-foreground transition-colors hover:bg-muted active:!translate-y-0 active:not-aria-[haspopup]:!translate-y-0',
-                isHomePage && 'bg-muted',
-              )}
-              onClick={() => router.push('/')}
-            >
-              <SquarePen className="h-4 w-4 shrink-0" aria-hidden="true" />
-            </button>
+            <SidebarNavButton
+              active={isHomePage}
+              collapsed
+              icon={SquarePen}
+              label="New chat"
+              className="h-10 w-10"
+              onClick={newChat}
+            />
 
-            <button
-              type="button"
-              aria-label="More"
-              className="flex h-9 w-10 items-center justify-center rounded-xl text-foreground transition-colors hover:bg-muted active:!translate-y-0 active:not-aria-[haspopup]:!translate-y-0"
+            <SidebarNavButton
+              collapsed
+              icon={Ellipsis}
+              label="More"
+              className="h-9 w-10"
               onClick={() => {
                 setOpenMenuChatId(null);
                 setChatMenuPosition(null);
               }}
-            >
-              <Ellipsis className="h-4 w-4 shrink-0" aria-hidden="true" />
-            </button>
+            />
           </div>
 
           <div className="relative flex justify-center bg-background px-1.5 pb-2">
-            {isUserMenuOpen ? renderUserMenu('fixed bottom-16 left-2 w-[230px]') : null}
+            {isUserMenuOpen ? (
+              <UserMenu
+                ref={userMenuRef}
+                user={user}
+                onLogout={() => void handleLogout()}
+                className="fixed bottom-16 left-2 w-[230px]"
+              />
+            ) : null}
 
             <button
               type="button"
@@ -398,9 +311,7 @@ export default function SidebarClient({ initialChats, user }: Props) {
               className="flex h-12 w-10 items-center justify-center rounded-xl transition-colors hover:bg-muted"
               onClick={toggleUserMenu}
             >
-              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-orange-500 text-[10px] font-semibold text-white">
-                {user.initials}
-              </div>
+              <UserAvatar initials={user.initials} />
             </button>
           </div>
         </>
@@ -431,30 +342,23 @@ export default function SidebarClient({ initialChats, user }: Props) {
                 </button>
               </div>
 
-              <Button
+              <SidebarNavButton
+                active={isHomePage}
+                icon={SquarePen}
+                label="New chat"
+                className="h-10"
                 onClick={newChat}
-                variant="ghost"
-                aria-current={isHomePage ? 'page' : undefined}
-                className={cn(
-                  'h-10 w-full justify-start rounded-xl px-2 text-foreground hover:bg-muted active:!translate-y-0 active:not-aria-[haspopup]:!translate-y-0',
-                  isHomePage && 'bg-muted',
-                )}
-              >
-                <SquarePen className="h-4 w-4" aria-hidden="true" />
-                New chat
-              </Button>
+              />
 
-              <Button
+              <SidebarNavButton
+                icon={Ellipsis}
+                label="More"
+                className="h-9"
                 onClick={() => {
                   setOpenMenuChatId(null);
                   setChatMenuPosition(null);
                 }}
-                variant="ghost"
-                className="h-9 w-full justify-start rounded-xl px-2 text-foreground hover:bg-muted active:!translate-y-0 active:not-aria-[haspopup]:!translate-y-0"
-              >
-                <Ellipsis className="h-4 w-4" aria-hidden="true" />
-                More
-              </Button>
+              />
             </div>
 
             <button
@@ -529,38 +433,11 @@ export default function SidebarClient({ initialChats, user }: Props) {
                             event.preventDefault();
                             event.stopPropagation();
                             cancelEditing();
-                            const rect = event.currentTarget.getBoundingClientRect();
-                            const preferredLeft = rect.left - 12;
-                            const left = Math.min(
-                              preferredLeft,
-                              window.innerWidth - CHAT_MENU_WIDTH - VIEWPORT_PADDING,
-                            );
-                            const preferredTop = rect.bottom + CHAT_MENU_GAP;
-                            const availableBottom =
-                              window.innerHeight - CHAT_MENU_HEIGHT - VIEWPORT_PADDING;
-                            const unclampedTop =
-                              preferredTop + CHAT_MENU_HEIGHT >
-                              window.innerHeight - VIEWPORT_PADDING
-                                ? Math.max(
-                                    VIEWPORT_PADDING,
-                                    rect.top - CHAT_MENU_HEIGHT - CHAT_MENU_GAP,
-                                  )
-                                : preferredTop;
-                            const top = Math.max(
-                              VIEWPORT_PADDING,
-                              Math.min(unclampedTop, Math.max(VIEWPORT_PADDING, availableBottom)),
-                            );
+                            const position = getChatMenuPosition(event.currentTarget);
 
                             setOpenMenuChatId((prev) => {
                               const nextChatId = prev === chat.id ? null : chat.id;
-                              setChatMenuPosition(
-                                nextChatId
-                                  ? {
-                                      top,
-                                      left: Math.max(VIEWPORT_PADDING, left),
-                                    }
-                                  : null,
-                              );
+                              setChatMenuPosition(nextChatId ? position : null);
 
                               return nextChatId;
                             });
@@ -572,70 +449,13 @@ export default function SidebarClient({ initialChats, user }: Props) {
                     )}
 
                     {openMenuChatId === chat.id && editingChatId !== chat.id && chatMenuPosition ? (
-                      <div
+                      <ChatActionsMenu
                         ref={chatMenuRef}
-                        className="fixed z-50 w-[230px] rounded-3xl border border-border bg-popover p-3 text-popover-foreground shadow-2xl dark:border-white/10 dark:bg-[rgb(52,52,52)] dark:text-white"
-                        style={{
-                          top: chatMenuPosition.top,
-                          left: chatMenuPosition.left,
-                        }}
-                      >
-                        <button
-                          type="button"
-                          className="flex h-11 w-full items-center gap-3 rounded-xl px-3 text-left text-sm hover:bg-white/10"
-                        >
-                          <Share className="h-5 w-5" aria-hidden="true" />
-                          <span className="min-w-0 flex-1 truncate">Share</span>
-                        </button>
-                        <button
-                          type="button"
-                          className="flex h-11 w-full items-center gap-3 rounded-xl px-3 text-left text-sm hover:bg-white/10"
-                        >
-                          <UserPlus className="h-5 w-5" aria-hidden="true" />
-                          <span className="min-w-0 flex-1 truncate">Start a group chat</span>
-                        </button>
-                        <button
-                          type="button"
-                          className="flex h-11 w-full items-center gap-3 rounded-xl px-3 text-left text-sm hover:bg-white/10"
-                          onClick={() => startEditing(chat)}
-                        >
-                          <Pencil className="h-5 w-5" aria-hidden="true" />
-                          <span className="min-w-0 flex-1 truncate">Rename</span>
-                        </button>
-                        <button
-                          type="button"
-                          className="flex h-11 w-full items-center gap-3 rounded-xl px-3 text-left text-sm hover:bg-white/10"
-                        >
-                          <Folder className="h-5 w-5" aria-hidden="true" />
-                          <span className="min-w-0 flex-1 truncate">Move to project</span>
-                          <ChevronRight className="h-4 w-4" aria-hidden="true" />
-                        </button>
-
-                        <div className="my-2 h-px bg-white/15" />
-
-                        <button
-                          type="button"
-                          className="flex h-11 w-full items-center gap-3 rounded-xl px-3 text-left text-sm hover:bg-white/10"
-                        >
-                          <Pin className="h-5 w-5" aria-hidden="true" />
-                          <span className="min-w-0 flex-1 truncate">Pin chat</span>
-                        </button>
-                        <button
-                          type="button"
-                          className="flex h-11 w-full items-center gap-3 rounded-xl px-3 text-left text-sm hover:bg-white/10"
-                        >
-                          <Archive className="h-5 w-5" aria-hidden="true" />
-                          <span className="min-w-0 flex-1 truncate">Archive</span>
-                        </button>
-                        <button
-                          type="button"
-                          className="flex h-11 w-full items-center gap-3 rounded-xl px-3 text-left text-sm text-red-400 hover:bg-white/10"
-                          onClick={() => void deleteChat(chat.id)}
-                        >
-                          <Trash2 className="h-5 w-5" aria-hidden="true" />
-                          <span className="min-w-0 flex-1 truncate">Delete</span>
-                        </button>
-                      </div>
+                        chat={chat}
+                        position={chatMenuPosition}
+                        onRename={startEditing}
+                        onDelete={(chatId) => void deleteChat(chatId)}
+                      />
                     ) : null}
                   </div>
                 ))}
@@ -644,7 +464,14 @@ export default function SidebarClient({ initialChats, user }: Props) {
           </div>
 
           <div className="relative border-t border-border bg-background px-2 py-2">
-            {isUserMenuOpen ? renderUserMenu('absolute right-0 bottom-full left-0 mb-2') : null}
+            {isUserMenuOpen ? (
+              <UserMenu
+                ref={userMenuRef}
+                user={user}
+                onLogout={() => void handleLogout()}
+                className="absolute right-0 bottom-full left-0 mb-2"
+              />
+            ) : null}
 
             <button
               type="button"
@@ -652,7 +479,15 @@ export default function SidebarClient({ initialChats, user }: Props) {
               className="flex h-12 w-full items-center gap-2.5 rounded-xl px-2 transition-colors hover:bg-muted"
               onClick={toggleUserMenu}
             >
-              {renderUserSummary()}
+              <UserAvatar initials={user.initials} />
+              <div className="min-w-0 flex-1 text-left">
+                <div className="truncate text-sm leading-5 font-medium text-foreground">
+                  {user.name}
+                </div>
+                <div className="truncate text-xs leading-4 text-muted-foreground">
+                  {user.planLabel}
+                </div>
+              </div>
             </button>
           </div>
         </>
