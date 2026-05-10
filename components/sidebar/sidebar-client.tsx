@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client';
@@ -8,6 +8,7 @@ import RecentChats from './recent-chats';
 import SidebarHeader from './sidebar-header';
 import SidebarUserSection from './sidebar-user-section';
 import useFloatingMenuPosition from './use-floating-menu-position';
+import useSidebarChats from './use-sidebar-chats';
 
 type Chat = {
   id: string;
@@ -31,7 +32,7 @@ const CHAT_MENU_GAP = 8;
 const VIEWPORT_PADDING = 12;
 
 export default function SidebarClient({ initialChats, user }: Props) {
-  const [chats, setChats] = useState<Chat[]>(initialChats);
+  const { chats, deleteChat: deleteSidebarChat, renameChat } = useSidebarChats(initialChats);
   const [openMenuChatId, setOpenMenuChatId] = useState<string | null>(null);
   const [chatMenuPosition, setChatMenuPosition] = useState<{ top: number; left: number } | null>(
     null,
@@ -57,32 +58,6 @@ export default function SidebarClient({ initialChats, user }: Props) {
 
   const currentChatId = pathname.startsWith('/chat/') ? pathname.split('/chat/')[1] : null;
   const isHomePage = pathname === '/';
-
-  const refreshChats = useCallback(async () => {
-    const res = await fetch('/api/chats', {
-      cache: 'no-store',
-    });
-
-    if (!res.ok) {
-      console.error('Load chats failed');
-      return;
-    }
-
-    const data: Chat[] = await res.json();
-    setChats(data);
-  }, []);
-
-  useEffect(() => {
-    const handleRefresh = () => {
-      void refreshChats();
-    };
-
-    window.addEventListener('chats:refresh', handleRefresh);
-
-    return () => {
-      window.removeEventListener('chats:refresh', handleRefresh);
-    };
-  }, [refreshChats]);
 
   useEffect(() => {
     if (!editingChatId) return;
@@ -112,27 +87,6 @@ export default function SidebarClient({ initialChats, user }: Props) {
       document.removeEventListener('mousedown', handlePointerDown);
     };
   }, []);
-
-  const renameChat = async (chatId: string, title: string) => {
-    const res = await fetch(`/api/chats/${chatId}`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ title }),
-    });
-
-    if (!res.ok) {
-      console.error('Rename chat failed');
-      return;
-    }
-
-    const updatedChat = await res.json();
-
-    setChats((prev) =>
-      prev.map((chat) => (chat.id === chatId ? { ...chat, title: updatedChat.title } : chat)),
-    );
-  };
 
   const startEditing = (chat: Chat) => {
     setOpenMenuChatId(null);
@@ -170,25 +124,15 @@ export default function SidebarClient({ initialChats, user }: Props) {
   };
 
   const deleteChat = async (chatId: string) => {
-    const confirmed = window.confirm('Delete this chat?');
+    const deleted = await deleteSidebarChat(chatId);
 
-    if (!confirmed) return;
-
-    const res = await fetch(`/api/chats/${chatId}`, {
-      method: 'DELETE',
-    });
-
-    if (!res.ok) {
-      console.error('Delete chat failed');
-      return;
-    }
+    if (!deleted) return;
 
     setOpenMenuChatId(null);
     setChatMenuPosition(null);
     if (editingChatId === chatId) {
       cancelEditing();
     }
-    setChats((prev) => prev.filter((chat) => chat.id !== chatId));
 
     if (window.location.pathname === `/chat/${chatId}`) {
       router.push('/');
