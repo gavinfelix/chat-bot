@@ -3,12 +3,12 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { Brain, ChevronDown, Ellipsis, PanelLeft, SquarePen } from 'lucide-react';
+import { ChevronDown, Ellipsis } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client';
 import ChatActionsMenu from './chat-actions-menu';
-import SidebarNavButton from './sidebar-nav-button';
+import SidebarHeader from './sidebar-header';
 import SidebarUserSection from './sidebar-user-section';
 import useFloatingMenuPosition from './use-floating-menu-position';
 
@@ -32,12 +32,6 @@ const CHAT_MENU_WIDTH = 230;
 const CHAT_MENU_HEIGHT = 350;
 const CHAT_MENU_GAP = 8;
 const VIEWPORT_PADDING = 12;
-
-function AppMark({ className }: { className?: string }) {
-  return (
-    <Brain className={className} aria-hidden="true" />
-  );
-}
 
 export default function SidebarClient({ initialChats, user }: Props) {
   const [chats, setChats] = useState<Chat[]>(initialChats);
@@ -217,6 +211,11 @@ export default function SidebarClient({ initialChats, user }: Props) {
     router.push('/');
   };
 
+  const closeHeaderMenu = () => {
+    setOpenMenuChatId(null);
+    setChatMenuPosition(null);
+  };
+
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut();
 
@@ -247,36 +246,13 @@ export default function SidebarClient({ initialChats, user }: Props) {
     >
       {isCollapsed ? (
         <>
-          <div className="flex min-h-0 flex-1 flex-col gap-3 bg-background px-2 pt-2">
-            <button
-              type="button"
-              aria-label="Expand sidebar"
-              className="flex h-10 w-full items-center justify-start rounded-xl px-2 text-foreground transition-colors hover:bg-muted"
-              onClick={toggleSidebar}
-            >
-              <AppMark className="h-5 w-5 shrink-0" />
-            </button>
-
-            <SidebarNavButton
-              active={isHomePage}
-              collapsed
-              icon={SquarePen}
-              label="New chat"
-              className="h-10 w-10"
-              onClick={newChat}
-            />
-
-            <SidebarNavButton
-              collapsed
-              icon={Ellipsis}
-              label="More"
-              className="h-9 w-10"
-              onClick={() => {
-                setOpenMenuChatId(null);
-                setChatMenuPosition(null);
-              }}
-            />
-          </div>
+          <SidebarHeader
+            collapsed={isCollapsed}
+            isHomePage={isHomePage}
+            onMore={closeHeaderMenu}
+            onNewChat={newChat}
+            onToggleSidebar={toggleSidebar}
+          />
 
           <SidebarUserSection
             collapsed={isCollapsed}
@@ -296,42 +272,13 @@ export default function SidebarClient({ initialChats, user }: Props) {
               setChatMenuPosition(null);
             }}
           >
-            <div className="sticky top-0 z-20 space-y-3 bg-background px-2 pt-2 pb-4">
-              <div className="flex h-10 items-center justify-between gap-2">
-                <button
-                  className="flex min-w-0 flex-1 items-center rounded-xl px-2 text-left text-base font-semibold text-foreground"
-                  onClick={() => router.push('/')}
-                >
-                  <span className="truncate">Chat Bot</span>
-                </button>
-                <button
-                  type="button"
-                  aria-label="Collapse sidebar"
-                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                  onClick={toggleSidebar}
-                >
-                  <PanelLeft className="h-4 w-4" aria-hidden="true" />
-                </button>
-              </div>
-
-              <SidebarNavButton
-                active={isHomePage}
-                icon={SquarePen}
-                label="New chat"
-                className="h-10"
-                onClick={newChat}
-              />
-
-              <SidebarNavButton
-                icon={Ellipsis}
-                label="More"
-                className="h-9"
-                onClick={() => {
-                  setOpenMenuChatId(null);
-                  setChatMenuPosition(null);
-                }}
-              />
-            </div>
+            <SidebarHeader
+              collapsed={isCollapsed}
+              isHomePage={isHomePage}
+              onMore={closeHeaderMenu}
+              onNewChat={newChat}
+              onToggleSidebar={toggleSidebar}
+            />
 
             <button
               type="button"
