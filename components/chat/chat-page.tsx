@@ -103,7 +103,7 @@ export default function ChatPage({ chatId }: Props) {
         <Messages messages={messages} />
       </div>
 
-      <div className="pointer-events-none sticky bottom-0 z-10 mt-6">
+      <div className="pointer-events-none fixed right-0 bottom-0 left-64 z-10">
         <div className="h-28 bg-gradient-to-t from-background via-background/95 to-transparent" />
         <div className="absolute inset-x-0 bottom-0 h-24 bg-background" />
         <div className="absolute inset-x-0 bottom-10 px-6">
