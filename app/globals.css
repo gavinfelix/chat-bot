@@ -127,6 +127,24 @@
   html {
     @apply font-sans;
   }
+  * {
+    scrollbar-color: var(--border) var(--background);
+  }
+  *::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  *::-webkit-scrollbar-track {
+    background: var(--background);
+  }
+  *::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border: 2px solid var(--background);
+    border-radius: 999px;
+  }
+  *::-webkit-scrollbar-thumb:hover {
+    background: var(--muted-foreground);
+  }
   button:not(:disabled),
   [role="button"]:not([aria-disabled="true"]),
   a[href] {
