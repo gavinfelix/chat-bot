@@ -220,12 +220,12 @@ export default function SidebarClient({ initialChats, user }: Props) {
 
   const renderUserSummary = () => (
     <>
-      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-orange-500 text-xs font-semibold text-white">
+      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-orange-500 text-[11px] font-semibold text-white">
         {user.initials}
       </div>
       <div className="min-w-0 flex-1 text-left">
-        <div className="truncate text-sm font-medium text-foreground">{user.name}</div>
-        <div className="truncate text-xs text-muted-foreground">{user.planLabel}</div>
+        <div className="truncate text-sm leading-5 font-medium text-foreground">{user.name}</div>
+        <div className="truncate text-xs leading-4 text-muted-foreground">{user.planLabel}</div>
       </div>
     </>
   );
@@ -267,10 +267,7 @@ export default function SidebarClient({ initialChats, user }: Props) {
         >
           <span>Recent</span>
           <ChevronDown
-            className={cn(
-              'h-4 w-4 transition-transform',
-              isRecentOpen ? 'rotate-0' : '-rotate-90',
-            )}
+            className={cn('h-4 w-4 transition-transform', isRecentOpen ? 'rotate-0' : '-rotate-90')}
             aria-hidden="true"
           />
         </button>
@@ -362,7 +359,7 @@ export default function SidebarClient({ initialChats, user }: Props) {
         ) : null}
       </div>
 
-      <div className="relative border-t border-border pt-3">
+      <div className="relative -mx-3 border-t border-border px-2 pt-2">
         {isUserMenuOpen ? (
           <div className="absolute right-0 bottom-full left-0 z-20 mb-2 rounded-2xl border border-border bg-popover p-3 text-popover-foreground shadow-xl">
             <div className="flex h-14 items-center gap-3 rounded-xl px-2">
@@ -429,7 +426,7 @@ export default function SidebarClient({ initialChats, user }: Props) {
         <button
           type="button"
           aria-expanded={isUserMenuOpen}
-          className="flex h-16 w-full items-center gap-3 rounded-2xl px-3 transition-colors hover:bg-background"
+          className="flex h-12 w-full items-center gap-2.5 rounded-xl px-3.5 transition-colors hover:bg-background"
           onClick={toggleUserMenu}
         >
           {renderUserSummary()}
