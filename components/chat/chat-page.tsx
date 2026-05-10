@@ -85,13 +85,15 @@ export default function ChatPage({ chatId }: Props) {
   };
 
   return (
-    <div className="h-full min-w-0 flex-1 overflow-y-auto bg-white">
+    <div className="h-full min-w-0 flex-1 overflow-y-auto bg-background text-foreground">
       <header className="pointer-events-none sticky top-0 z-10 flex h-12 items-center justify-between px-6">
-        <h1 className="pointer-events-auto select-text text-sm font-medium text-zinc-700">Chat</h1>
+        <h1 className="pointer-events-auto select-text text-sm font-medium text-muted-foreground">
+          Chat
+        </h1>
         <button
           type="button"
           aria-label="More actions"
-          className="pointer-events-auto flex h-8 w-8 items-center justify-center rounded-full text-zinc-500 transition hover:bg-zinc-100 hover:text-zinc-900"
+          className="pointer-events-auto flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition hover:bg-muted hover:text-foreground"
         >
           <span className="text-base leading-none">...</span>
         </button>
@@ -102,13 +104,13 @@ export default function ChatPage({ chatId }: Props) {
       </div>
 
       <div className="pointer-events-none sticky bottom-0 z-10 mt-6">
-        <div className="h-28 bg-gradient-to-t from-white via-white/95 to-transparent" />
-        <div className="absolute inset-x-0 bottom-0 h-24 bg-white" />
+        <div className="h-28 bg-gradient-to-t from-background via-background/95 to-transparent" />
+        <div className="absolute inset-x-0 bottom-0 h-24 bg-background" />
         <div className="absolute inset-x-0 bottom-10 px-6">
           <ChatInput sendMessage={triggerSend} input={input} setInput={setInput} />
         </div>
         <div className="absolute inset-x-0 bottom-3 flex justify-center px-6">
-          <p className="text-center text-xs text-zinc-500">
+          <p className="text-center text-xs text-muted-foreground">
             Chat Bot can make mistakes. Check important info.
           </p>
         </div>
