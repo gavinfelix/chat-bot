@@ -50,7 +50,6 @@ export default async function Sidebar({ user }: Props) {
       initialChats={chatsData}
       user={{
         name,
-        email,
         initials: getInitials(name),
         planLabel,
       }}
