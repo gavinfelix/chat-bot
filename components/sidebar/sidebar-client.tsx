@@ -1,71 +1,83 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
-import { LogoutButton } from '@/components/auth/logout-button';
+import { createClient } from '@/lib/supabase/client';
+import RecentChats from './sidebar-chat-list';
+import SidebarHeader from './sidebar-header';
+import SidebarUserSection from './sidebar-user-section';
+import useChatEditing from './use-sidebar-editing';
+import useFloatingMenuPosition from './use-floating-menu-position';
+import useSidebarChats from './use-sidebar-chats';
 
 type Chat = {
   id: string;
   title: string;
 };
 
-type Props = {
-  initialChats: Chat[];
+type SidebarUser = {
+  name: string;
+  initials: string;
+  planLabel: string;
 };
 
-export default function SidebarClient({ initialChats }: Props) {
-  const [chats, setChats] = useState<Chat[]>(initialChats);
+type Props = {
+  initialChats: Chat[];
+  user: SidebarUser;
+};
+
+const CHAT_MENU_WIDTH = 230;
+const CHAT_MENU_HEIGHT = 350;
+const CHAT_MENU_GAP = 8;
+const VIEWPORT_PADDING = 12;
+
+export default function SidebarClient({ initialChats, user }: Props) {
+  const { chats, deleteChat: deleteSidebarChat, renameChat } = useSidebarChats(initialChats);
   const [openMenuChatId, setOpenMenuChatId] = useState<string | null>(null);
-  const [editingChatId, setEditingChatId] = useState<string | null>(null);
-  const [editingTitle, setEditingTitle] = useState('');
+  const [chatMenuPosition, setChatMenuPosition] = useState<{ top: number; left: number } | null>(
+    null,
+  );
+  const [isRecentOpen, setIsRecentOpen] = useState(true);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
-  const editInputRef = useRef<HTMLInputElement | null>(null);
+  const supabase = createClient();
   const sidebarRef = useRef<HTMLDivElement | null>(null);
+  const chatMenuRef = useRef<HTMLDivElement | null>(null);
+  const userMenuRef = useRef<HTMLDivElement | null>(null);
+  const {
+    cancelEditing,
+    editingChatId,
+    editingTitle,
+    editInputRef,
+    saveEditing,
+    setEditingTitle,
+    startEditing,
+  } = useChatEditing(renameChat);
+  const getChatMenuPosition = useFloatingMenuPosition({
+    gap: CHAT_MENU_GAP,
+    height: CHAT_MENU_HEIGHT,
+    padding: VIEWPORT_PADDING,
+    width: CHAT_MENU_WIDTH,
+  });
 
   const currentChatId = pathname.startsWith('/chat/') ? pathname.split('/chat/')[1] : null;
-
-  const refreshChats = useCallback(async () => {
-    const res = await fetch('/api/chats', {
-      cache: 'no-store',
-    });
-
-    if (!res.ok) {
-      console.error('Load chats failed');
-      return;
-    }
-
-    const data: Chat[] = await res.json();
-    setChats(data);
-  }, []);
-
-  useEffect(() => {
-    const handleRefresh = () => {
-      void refreshChats();
-    };
-
-    window.addEventListener('chats:refresh', handleRefresh);
-
-    return () => {
-      window.removeEventListener('chats:refresh', handleRefresh);
-    };
-  }, [refreshChats]);
-
-  useEffect(() => {
-    if (!editingChatId) return;
-
-    editInputRef.current?.focus();
-    editInputRef.current?.select();
-  }, [editingChatId]);
+  const isHomePage = pathname === '/';
 
   useEffect(() => {
     const handlePointerDown = (event: MouseEvent) => {
-      if (!sidebarRef.current?.contains(event.target as Node)) {
+      const target = event.target as Node;
+
+      if (
+        !sidebarRef.current?.contains(target) &&
+        !chatMenuRef.current?.contains(target) &&
+        !userMenuRef.current?.contains(target)
+      ) {
         setOpenMenuChatId(null);
+        setChatMenuPosition(null);
+        setIsUserMenuOpen(false);
       }
     };
 
@@ -76,216 +88,169 @@ export default function SidebarClient({ initialChats }: Props) {
     };
   }, []);
 
-  const createNewChat = async () => {
-    const res = await fetch('/api/chats', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        title: 'New chat',
-      }),
-    });
-
-    if (!res.ok) {
-      console.error('Create chat failed');
-      return;
-    }
-
-    const chat: Chat = await res.json();
-
-    await refreshChats();
-
-    router.push(`/chat/${chat.id}`);
-  };
-
-  const renameChat = async (chatId: string, title: string) => {
-    const res = await fetch(`/api/chats/${chatId}`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ title }),
-    });
-
-    if (!res.ok) {
-      console.error('Rename chat failed');
-      return;
-    }
-
-    const updatedChat = await res.json();
-
-    setChats((prev) =>
-      prev.map((chat) => (chat.id === chatId ? { ...chat, title: updatedChat.title } : chat)),
-    );
-  };
-
-  const startEditing = (chat: Chat) => {
+  const startChatEditing = (chat: Chat) => {
     setOpenMenuChatId(null);
-    setEditingChatId(chat.id);
-    setEditingTitle(chat.title);
+    startEditing(chat);
   };
 
-  const cancelEditing = () => {
-    setEditingChatId(null);
-    setEditingTitle('');
-  };
-
-  const saveEditing = async (chatId: string) => {
-    const nextTitle = editingTitle.trim();
-
-    if (!nextTitle) {
+  const toggleRecent = () => {
+    if (isRecentOpen) {
+      setOpenMenuChatId(null);
+      setChatMenuPosition(null);
       cancelEditing();
-      return;
     }
 
-    await renameChat(chatId, nextTitle);
-    cancelEditing();
-    setOpenMenuChatId(null);
+    setIsRecentOpen((prev) => !prev);
+  };
+
+  const saveChatEditing = async (chatId: string) => {
+    const saved = await saveEditing(chatId);
+    if (saved) {
+      setOpenMenuChatId(null);
+      setChatMenuPosition(null);
+    }
   };
 
   const deleteChat = async (chatId: string) => {
-    const confirmed = window.confirm('Delete this chat?');
+    const deleted = await deleteSidebarChat(chatId);
 
-    if (!confirmed) return;
-
-    const res = await fetch(`/api/chats/${chatId}`, {
-      method: 'DELETE',
-    });
-
-    if (!res.ok) {
-      console.error('Delete chat failed');
-      return;
-    }
+    if (!deleted) return;
 
     setOpenMenuChatId(null);
+    setChatMenuPosition(null);
     if (editingChatId === chatId) {
       cancelEditing();
     }
-    setChats((prev) => prev.filter((chat) => chat.id !== chatId));
 
     if (window.location.pathname === `/chat/${chatId}`) {
       router.push('/');
     }
   };
 
+  const toggleUserMenu = () => {
+    setOpenMenuChatId(null);
+    setChatMenuPosition(null);
+    cancelEditing();
+    setIsUserMenuOpen((prev) => !prev);
+  };
+
+  const newChat = () => {
+    if (pathname === '/') return;
+
+    router.push('/');
+  };
+
+  const closeHeaderMenu = () => {
+    setOpenMenuChatId(null);
+    setChatMenuPosition(null);
+  };
+
+  const openChatMenu = (chat: Chat, button: HTMLElement) => {
+    cancelEditing();
+    const position = getChatMenuPosition(button);
+
+    setOpenMenuChatId((prev) => {
+      const nextChatId = prev === chat.id ? null : chat.id;
+      setChatMenuPosition(nextChatId ? position : null);
+
+      return nextChatId;
+    });
+  };
+
+  const handleLogout = async () => {
+    const { error } = await supabase.auth.signOut();
+
+    if (error) {
+      alert(error.message);
+      return;
+    }
+
+    router.push('/login');
+    router.refresh();
+  };
+
+  const toggleSidebar = () => {
+    setOpenMenuChatId(null);
+    setChatMenuPosition(null);
+    setIsUserMenuOpen(false);
+    cancelEditing();
+    setIsCollapsed((prev) => !prev);
+  };
+
   return (
-    <div className="flex h-full w-full flex-col p-3" ref={sidebarRef}>
-      <div className="space-y-3 border-b border-border pb-4">
-        <button
-          className="flex h-10 items-center rounded-xl px-3 text-left text-sm font-semibold text-foreground"
-          onClick={() => router.push('/')}
-        >
-          Chat Bot
-        </button>
+    <div
+      className={cn(
+        'flex h-full min-w-0 shrink-0 flex-col overflow-x-hidden bg-background transition-[width] duration-200 ease-out',
+        isCollapsed ? 'w-14' : 'w-[260px]',
+      )}
+      ref={sidebarRef}
+    >
+      {isCollapsed ? (
+        <>
+          <SidebarHeader
+            collapsed={isCollapsed}
+            isHomePage={isHomePage}
+            onMore={closeHeaderMenu}
+            onNewChat={newChat}
+            onToggleSidebar={toggleSidebar}
+          />
 
-        <Button
-          onClick={createNewChat}
-          variant="outline"
-          className="h-10 w-full justify-start rounded-xl"
-        >
-          New chat
-        </Button>
+          <SidebarUserSection
+            collapsed={isCollapsed}
+            isOpen={isUserMenuOpen}
+            menuRef={userMenuRef}
+            onLogout={() => void handleLogout()}
+            onToggle={toggleUserMenu}
+            user={user}
+          />
+        </>
+      ) : (
+        <>
+          <div
+            className="sidebar-scrollbar min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto bg-background pb-4"
+            onScroll={() => {
+              setOpenMenuChatId(null);
+              setChatMenuPosition(null);
+            }}
+          >
+            <SidebarHeader
+              collapsed={isCollapsed}
+              isHomePage={isHomePage}
+              onMore={closeHeaderMenu}
+              onNewChat={newChat}
+              onToggleSidebar={toggleSidebar}
+            />
 
-        <Button
-          onClick={() => router.push('/')}
-          variant="ghost"
-          className="h-9 w-full justify-start rounded-xl text-muted-foreground"
-        >
-          Home
-        </Button>
-      </div>
-
-      <div className="min-h-0 flex-1 overflow-y-auto py-4">
-        <div className="mb-3 px-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-          Recent chats
-        </div>
-        {chats.map((chat) => (
-          <div className="group relative mb-1" key={chat.id}>
-            {editingChatId === chat.id ? (
-              <Input
-                ref={editInputRef}
-                value={editingTitle}
-                onChange={(event) => setEditingTitle(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.nativeEvent.isComposing) {
-                    return;
-                  }
-
-                  if (event.key === 'Enter') {
-                    event.preventDefault();
-                    void saveEditing(chat.id);
-                  }
-
-                  if (event.key === 'Escape') {
-                    event.preventDefault();
-                    cancelEditing();
-                  }
-                }}
-                onBlur={() => {
-                  void saveEditing(chat.id);
-                }}
-                className="h-10 rounded-xl text-sm shadow-none"
-              />
-            ) : (
-              <>
-                <Link
-                  href={`/chat/${chat.id}`}
-                  className={cn(
-                    'block rounded-xl px-3 py-2 pr-10 text-sm transition-colors',
-                    chat.id === currentChatId
-                      ? 'bg-primary text-primary-foreground'
-                      : 'text-muted-foreground hover:bg-background hover:text-foreground',
-                  )}
-                >
-                  <span className="block truncate">{chat.title}</span>
-                </Link>
-                <button
-                  type="button"
-                  aria-label="Chat actions"
-                  className={cn(
-                    'absolute top-1/2 right-2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground transition hover:bg-muted hover:text-foreground',
-                    openMenuChatId === chat.id
-                      ? 'opacity-100'
-                      : 'opacity-0 group-hover:opacity-100',
-                  )}
-                  onClick={(event) => {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    cancelEditing();
-                    setOpenMenuChatId((prev) => (prev === chat.id ? null : chat.id));
-                  }}
-                >
-                  <span className="text-base leading-none">...</span>
-                </button>
-              </>
-            )}
-
-            {openMenuChatId === chat.id && editingChatId !== chat.id ? (
-              <div className="absolute top-11 right-2 z-10 min-w-28 rounded-xl border border-border bg-popover p-1 text-popover-foreground shadow-lg">
-                <button
-                  type="button"
-                  className="flex w-full rounded-lg px-3 py-2 text-left text-sm hover:bg-muted"
-                  onClick={() => startEditing(chat)}
-                >
-                  Rename
-                </button>
-                <button
-                  type="button"
-                  className="flex w-full rounded-lg px-3 py-2 text-left text-sm text-destructive hover:bg-muted"
-                  onClick={() => void deleteChat(chat.id)}
-                >
-                  Delete
-                </button>
-              </div>
-            ) : null}
+            <RecentChats
+              chatMenuPosition={chatMenuPosition}
+              chatMenuRef={chatMenuRef}
+              chats={chats}
+              currentChatId={currentChatId}
+              editingChatId={editingChatId}
+              editingTitle={editingTitle}
+              editInputRef={editInputRef}
+              isOpen={isRecentOpen}
+              onCancelEditing={cancelEditing}
+              onDeleteChat={(chatId) => void deleteChat(chatId)}
+              onEditingTitleChange={setEditingTitle}
+              onOpenChatMenu={openChatMenu}
+              onSaveEditing={(chatId) => void saveChatEditing(chatId)}
+              onStartEditing={startChatEditing}
+              onToggleOpen={toggleRecent}
+              openMenuChatId={openMenuChatId}
+            />
           </div>
-        ))}
-      </div>
 
-      <div className="border-t border-border pt-3">
-        <LogoutButton />
-      </div>
+          <SidebarUserSection
+            collapsed={isCollapsed}
+            isOpen={isUserMenuOpen}
+            menuRef={userMenuRef}
+            onLogout={() => void handleLogout()}
+            onToggle={toggleUserMenu}
+            user={user}
+          />
+        </>
+      )}
     </div>
   );
 }
