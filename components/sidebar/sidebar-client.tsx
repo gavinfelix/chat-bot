@@ -7,11 +7,20 @@ import {
   ChevronDown,
   ChevronRight,
   CircleUserRound,
+  Ellipsis,
+  Archive,
+  Folder,
   LifeBuoy,
   LogOut,
+  Pencil,
+  Pin,
   Settings,
+  Share,
   SlidersHorizontal,
+  SquarePen,
   Sparkles,
+  Trash2,
+  UserPlus,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -35,9 +44,17 @@ type Props = {
   user: SidebarUser;
 };
 
+const CHAT_MENU_WIDTH = 230;
+const CHAT_MENU_HEIGHT = 350;
+const CHAT_MENU_GAP = 8;
+const VIEWPORT_PADDING = 12;
+
 export default function SidebarClient({ initialChats, user }: Props) {
   const [chats, setChats] = useState<Chat[]>(initialChats);
   const [openMenuChatId, setOpenMenuChatId] = useState<string | null>(null);
+  const [chatMenuPosition, setChatMenuPosition] = useState<{ top: number; left: number } | null>(
+    null,
+  );
   const [editingChatId, setEditingChatId] = useState<string | null>(null);
   const [editingTitle, setEditingTitle] = useState('');
   const [isRecentOpen, setIsRecentOpen] = useState(true);
@@ -87,6 +104,7 @@ export default function SidebarClient({ initialChats, user }: Props) {
     const handlePointerDown = (event: MouseEvent) => {
       if (!sidebarRef.current?.contains(event.target as Node)) {
         setOpenMenuChatId(null);
+        setChatMenuPosition(null);
         setIsUserMenuOpen(false);
       }
     };
@@ -97,29 +115,6 @@ export default function SidebarClient({ initialChats, user }: Props) {
       document.removeEventListener('mousedown', handlePointerDown);
     };
   }, []);
-
-  const createNewChat = async () => {
-    const res = await fetch('/api/chats', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        title: 'New chat',
-      }),
-    });
-
-    if (!res.ok) {
-      console.error('Create chat failed');
-      return;
-    }
-
-    const chat: Chat = await res.json();
-
-    await refreshChats();
-
-    router.push(`/chat/${chat.id}`);
-  };
 
   const renameChat = async (chatId: string, title: string) => {
     const res = await fetch(`/api/chats/${chatId}`, {
@@ -156,6 +151,7 @@ export default function SidebarClient({ initialChats, user }: Props) {
   const toggleRecent = () => {
     if (isRecentOpen) {
       setOpenMenuChatId(null);
+      setChatMenuPosition(null);
       cancelEditing();
     }
 
@@ -173,6 +169,7 @@ export default function SidebarClient({ initialChats, user }: Props) {
     await renameChat(chatId, nextTitle);
     cancelEditing();
     setOpenMenuChatId(null);
+    setChatMenuPosition(null);
   };
 
   const deleteChat = async (chatId: string) => {
@@ -190,6 +187,7 @@ export default function SidebarClient({ initialChats, user }: Props) {
     }
 
     setOpenMenuChatId(null);
+    setChatMenuPosition(null);
     if (editingChatId === chatId) {
       cancelEditing();
     }
@@ -202,6 +200,7 @@ export default function SidebarClient({ initialChats, user }: Props) {
 
   const toggleUserMenu = () => {
     setOpenMenuChatId(null);
+    setChatMenuPosition(null);
     cancelEditing();
     setIsUserMenuOpen((prev) => !prev);
   };
@@ -231,41 +230,52 @@ export default function SidebarClient({ initialChats, user }: Props) {
   );
 
   return (
-    <div className="flex h-full w-full flex-col p-3" ref={sidebarRef}>
-      <div className="space-y-3 border-b border-border pb-4">
-        <button
-          className="flex h-10 items-center rounded-xl px-3 text-left text-sm font-semibold text-foreground"
-          onClick={() => router.push('/')}
-        >
-          Chat Bot
-        </button>
+    <div className="flex h-full w-full flex-col p-2" ref={sidebarRef}>
+      <div
+        className="min-h-0 flex-1 overflow-y-auto pb-4"
+        onScroll={() => {
+          setOpenMenuChatId(null);
+          setChatMenuPosition(null);
+        }}
+      >
+        <div className="sticky top-0 z-10 space-y-3 pb-4">
+          <button
+            className="flex h-10 items-center rounded-xl px-2 text-left text-base font-semibold text-foreground"
+            onClick={() => router.push('/')}
+          >
+            Chat Bot
+          </button>
 
-        <Button
-          onClick={createNewChat}
-          variant="outline"
-          className="h-10 w-full justify-start rounded-xl"
-        >
-          New chat
-        </Button>
+          <Button
+            onClick={() => router.push('/')}
+            variant="ghost"
+            className="h-10 w-full justify-start rounded-xl px-2 text-foreground hover:bg-background"
+          >
+            <SquarePen className="h-4 w-4" aria-hidden="true" />
+            New chat
+          </Button>
 
-        <Button
-          onClick={() => router.push('/')}
-          variant="ghost"
-          className="h-9 w-full justify-start rounded-xl text-muted-foreground"
-        >
-          Home
-        </Button>
-      </div>
+          <Button
+            onClick={() => {
+              setOpenMenuChatId(null);
+              setChatMenuPosition(null);
+            }}
+            variant="ghost"
+            className="h-9 w-full justify-start rounded-xl px-2 text-foreground hover:bg-background"
+          >
+            <Ellipsis className="h-4 w-4" aria-hidden="true" />
+            More
+          </Button>
+        </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto py-4">
         <button
           type="button"
           aria-expanded={isRecentOpen}
           aria-controls="recent-chat-list"
-          className="mb-2 flex h-8 w-full items-center justify-between rounded-lg px-2 text-xs font-medium uppercase tracking-wide text-muted-foreground transition-colors hover:bg-background hover:text-foreground"
+          className="mb-2 flex h-8 w-full items-center justify-between rounded-lg px-2 text-sm font-semibold tracking-wide text-foreground transition-colors hover:bg-background"
           onClick={toggleRecent}
         >
-          <span>Recent</span>
+          <span>Recents</span>
           <ChevronDown
             className={cn('h-4 w-4 transition-transform', isRecentOpen ? 'rotate-0' : '-rotate-90')}
             aria-hidden="true"
@@ -306,10 +316,10 @@ export default function SidebarClient({ initialChats, user }: Props) {
                     <Link
                       href={`/chat/${chat.id}`}
                       className={cn(
-                        'block rounded-xl px-3 py-2 pr-10 text-sm transition-colors',
+                        'block rounded-lg px-2 py-2 pr-10 text-sm transition-colors',
                         chat.id === currentChatId
-                          ? 'bg-primary text-primary-foreground'
-                          : 'text-muted-foreground hover:bg-background hover:text-foreground',
+                          ? 'bg-[rgb(47,47,47)] text-white'
+                          : 'text-foreground hover:bg-background group-hover:bg-background',
                       )}
                     >
                       <span className="block truncate">{chat.title}</span>
@@ -318,7 +328,7 @@ export default function SidebarClient({ initialChats, user }: Props) {
                       type="button"
                       aria-label="Chat actions"
                       className={cn(
-                        'absolute top-1/2 right-2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground transition hover:bg-muted hover:text-foreground',
+                        'absolute top-1/2 right-2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-md text-foreground/70 transition',
                         openMenuChatId === chat.id
                           ? 'opacity-100'
                           : 'opacity-0 group-hover:opacity-100',
@@ -327,29 +337,105 @@ export default function SidebarClient({ initialChats, user }: Props) {
                         event.preventDefault();
                         event.stopPropagation();
                         cancelEditing();
-                        setOpenMenuChatId((prev) => (prev === chat.id ? null : chat.id));
+                        const rect = event.currentTarget.getBoundingClientRect();
+                        const preferredLeft = rect.left - 12;
+                        const left = Math.min(
+                          preferredLeft,
+                          window.innerWidth - CHAT_MENU_WIDTH - VIEWPORT_PADDING,
+                        );
+                        const preferredTop = rect.bottom + CHAT_MENU_GAP;
+                        const availableBottom = window.innerHeight - CHAT_MENU_HEIGHT - VIEWPORT_PADDING;
+                        const unclampedTop =
+                          preferredTop + CHAT_MENU_HEIGHT > window.innerHeight - VIEWPORT_PADDING
+                            ? Math.max(VIEWPORT_PADDING, rect.top - CHAT_MENU_HEIGHT - CHAT_MENU_GAP)
+                            : preferredTop;
+                        const top = Math.max(
+                          VIEWPORT_PADDING,
+                          Math.min(unclampedTop, Math.max(VIEWPORT_PADDING, availableBottom)),
+                        );
+
+                        setOpenMenuChatId((prev) => {
+                          const nextChatId = prev === chat.id ? null : chat.id;
+                          setChatMenuPosition(
+                            nextChatId
+                              ? {
+                                  top,
+                                  left: Math.max(VIEWPORT_PADDING, left),
+                                }
+                              : null,
+                          );
+
+                          return nextChatId;
+                        });
                       }}
                     >
-                      <span className="text-base leading-none">...</span>
+                      <Ellipsis className="h-4 w-4" aria-hidden="true" />
                     </button>
                   </>
                 )}
 
-                {openMenuChatId === chat.id && editingChatId !== chat.id ? (
-                  <div className="absolute top-11 right-2 z-10 min-w-28 rounded-xl border border-border bg-popover p-1 text-popover-foreground shadow-lg">
+                {openMenuChatId === chat.id && editingChatId !== chat.id && chatMenuPosition ? (
+                  <div
+                    className="fixed z-50 w-[230px] rounded-3xl border border-white/10 bg-[rgb(52,52,52)] p-3 text-white shadow-2xl"
+                    style={{
+                      top: chatMenuPosition.top,
+                      left: chatMenuPosition.left,
+                    }}
+                  >
                     <button
                       type="button"
-                      className="flex w-full rounded-lg px-3 py-2 text-left text-sm hover:bg-muted"
-                      onClick={() => startEditing(chat)}
+                      className="flex h-11 w-full items-center gap-3 rounded-xl px-3 text-left text-sm hover:bg-white/10"
                     >
-                      Rename
+                      <Share className="h-5 w-5" aria-hidden="true" />
+                      <span className="min-w-0 flex-1 truncate">Share</span>
                     </button>
                     <button
                       type="button"
-                      className="flex w-full rounded-lg px-3 py-2 text-left text-sm text-destructive hover:bg-muted"
+                      className="flex h-11 w-full items-center gap-3 rounded-xl px-3 text-left text-sm hover:bg-white/10"
+                    >
+                      <UserPlus className="h-5 w-5" aria-hidden="true" />
+                      <span className="min-w-0 flex-1 truncate">Start a group chat</span>
+                    </button>
+                    <button
+                      type="button"
+                      className="flex h-11 w-full items-center gap-3 rounded-xl px-3 text-left text-sm hover:bg-white/10"
+                      onClick={() => startEditing(chat)}
+                    >
+                      <Pencil className="h-5 w-5" aria-hidden="true" />
+                      <span className="min-w-0 flex-1 truncate">Rename</span>
+                    </button>
+                    <button
+                      type="button"
+                      className="flex h-11 w-full items-center gap-3 rounded-xl px-3 text-left text-sm hover:bg-white/10"
+                    >
+                      <Folder className="h-5 w-5" aria-hidden="true" />
+                      <span className="min-w-0 flex-1 truncate">Move to project</span>
+                      <ChevronRight className="h-4 w-4" aria-hidden="true" />
+                    </button>
+
+                    <div className="my-2 h-px bg-white/15" />
+
+                    <button
+                      type="button"
+                      className="flex h-11 w-full items-center gap-3 rounded-xl px-3 text-left text-sm hover:bg-white/10"
+                    >
+                      <Pin className="h-5 w-5" aria-hidden="true" />
+                      <span className="min-w-0 flex-1 truncate">Pin chat</span>
+                    </button>
+                    <button
+                      type="button"
+                      className="flex h-11 w-full items-center gap-3 rounded-xl px-3 text-left text-sm hover:bg-white/10"
+                    >
+                      <Archive className="h-5 w-5" aria-hidden="true" />
+                      <span className="min-w-0 flex-1 truncate">Archive</span>
+                    </button>
+                    <button
+                      type="button"
+                      className="flex h-11 w-full items-center gap-3 rounded-xl px-3 text-left text-sm text-red-400 hover:bg-white/10"
                       onClick={() => void deleteChat(chat.id)}
                     >
-                      Delete
+                      <Trash2 className="h-5 w-5" aria-hidden="true" />
+                      <span className="min-w-0 flex-1 truncate">Delete</span>
                     </button>
                   </div>
                 ) : null}
@@ -359,7 +445,7 @@ export default function SidebarClient({ initialChats, user }: Props) {
         ) : null}
       </div>
 
-      <div className="relative -mx-3 border-t border-border px-2 pt-2">
+      <div className="relative -mx-2 border-t border-border px-2 pt-2">
         {isUserMenuOpen ? (
           <div className="absolute right-0 bottom-full left-0 z-20 mb-2 rounded-2xl border border-border bg-popover p-3 text-popover-foreground shadow-xl">
             <div className="flex h-14 items-center gap-3 rounded-xl px-2">
@@ -426,7 +512,7 @@ export default function SidebarClient({ initialChats, user }: Props) {
         <button
           type="button"
           aria-expanded={isUserMenuOpen}
-          className="flex h-12 w-full items-center gap-2.5 rounded-xl px-3.5 transition-colors hover:bg-background"
+          className="flex h-12 w-full items-center gap-2.5 rounded-xl px-2 transition-colors hover:bg-background"
           onClick={toggleUserMenu}
         >
           {renderUserSummary()}
