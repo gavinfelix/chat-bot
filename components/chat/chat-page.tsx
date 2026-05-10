@@ -86,10 +86,12 @@ export default function ChatPage({ chatId }: Props) {
 
   return (
     <div className="h-full min-w-0 flex-1 overflow-y-auto bg-background text-foreground">
-      <header className="pointer-events-none sticky top-0 z-10 flex h-12 items-center justify-between px-6">
+      {/* Header overlay, inside scroll container */}
+      <header className="pointer-events-none sticky top-0 z-20 flex h-12 items-center justify-between bg-transparent px-6">
         <h1 className="pointer-events-auto select-text text-sm font-medium text-muted-foreground">
           Chat
         </h1>
+
         <button
           type="button"
           aria-label="More actions"
@@ -99,16 +101,21 @@ export default function ChatPage({ chatId }: Props) {
         </button>
       </header>
 
-      <div className="px-6 pt-2 pb-10">
+      {/* Main content */}
+      <main className="min-h-[calc(100%-48px)] px-6 pt-2 pb-44">
         <Messages messages={messages} />
-      </div>
+      </main>
 
-      <div className="pointer-events-none fixed right-0 bottom-0 left-64 z-10">
-        <div className="h-28 bg-gradient-to-t from-background via-background/95 to-transparent" />
-        <div className="absolute inset-x-0 bottom-0 h-24 bg-background" />
+      {/* Composer overlay */}
+      <div className="pointer-events-none sticky bottom-0 z-20 -mt-44">
+        <div className="h-44 bg-gradient-to-t from-background via-background/95 to-transparent" />
+
         <div className="absolute inset-x-0 bottom-10 px-6">
-          <ChatInput sendMessage={triggerSend} input={input} setInput={setInput} />
+          <div className="pointer-events-auto mx-auto max-w-3xl">
+            <ChatInput sendMessage={triggerSend} input={input} setInput={setInput} />
+          </div>
         </div>
+
         <div className="absolute inset-x-0 bottom-3 flex justify-center px-6">
           <p className="text-center text-xs text-muted-foreground">
             Chat Bot can make mistakes. Check important info.
