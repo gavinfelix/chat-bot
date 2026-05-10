@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { ChevronDown, Ellipsis } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
-import ChatActionsMenu from './chat-actions-menu';
+import ChatActionsMenu from './sidebar-chat-actions-menu';
 
 type Position = {
   left: number;

@@ -1,7 +1,7 @@
 import type { Ref } from 'react';
 import { cn } from '@/lib/utils';
-import UserAvatar from './user-avatar';
-import UserMenu from './user-menu';
+import UserAvatar from './sidebar-user-avatar';
+import UserMenu from './sidebar-user-menu';
 
 type SidebarUser = {
   name: string;

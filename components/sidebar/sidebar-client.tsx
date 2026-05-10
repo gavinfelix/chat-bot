@@ -4,10 +4,10 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client';
-import RecentChats from './recent-chats';
+import RecentChats from './sidebar-chat-list';
 import SidebarHeader from './sidebar-header';
 import SidebarUserSection from './sidebar-user-section';
-import useChatEditing from './use-chat-editing';
+import useChatEditing from './use-sidebar-editing';
 import useFloatingMenuPosition from './use-floating-menu-position';
 import useSidebarChats from './use-sidebar-chats';
 

@@ -9,7 +9,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import UserAvatar from './user-avatar';
+import UserAvatar from './sidebar-user-avatar';
 
 type SidebarUser = {
   name: string;
