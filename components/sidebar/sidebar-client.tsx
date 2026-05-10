@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/client';
 import RecentChats from './recent-chats';
 import SidebarHeader from './sidebar-header';
 import SidebarUserSection from './sidebar-user-section';
+import useChatEditing from './use-chat-editing';
 import useFloatingMenuPosition from './use-floating-menu-position';
 import useSidebarChats from './use-sidebar-chats';
 
@@ -37,18 +38,24 @@ export default function SidebarClient({ initialChats, user }: Props) {
   const [chatMenuPosition, setChatMenuPosition] = useState<{ top: number; left: number } | null>(
     null,
   );
-  const [editingChatId, setEditingChatId] = useState<string | null>(null);
-  const [editingTitle, setEditingTitle] = useState('');
   const [isRecentOpen, setIsRecentOpen] = useState(true);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
   const supabase = createClient();
-  const editInputRef = useRef<HTMLInputElement | null>(null);
   const sidebarRef = useRef<HTMLDivElement | null>(null);
   const chatMenuRef = useRef<HTMLDivElement | null>(null);
   const userMenuRef = useRef<HTMLDivElement | null>(null);
+  const {
+    cancelEditing,
+    editingChatId,
+    editingTitle,
+    editInputRef,
+    saveEditing,
+    setEditingTitle,
+    startEditing,
+  } = useChatEditing(renameChat);
   const getChatMenuPosition = useFloatingMenuPosition({
     gap: CHAT_MENU_GAP,
     height: CHAT_MENU_HEIGHT,
@@ -58,13 +65,6 @@ export default function SidebarClient({ initialChats, user }: Props) {
 
   const currentChatId = pathname.startsWith('/chat/') ? pathname.split('/chat/')[1] : null;
   const isHomePage = pathname === '/';
-
-  useEffect(() => {
-    if (!editingChatId) return;
-
-    editInputRef.current?.focus();
-    editInputRef.current?.select();
-  }, [editingChatId]);
 
   useEffect(() => {
     const handlePointerDown = (event: MouseEvent) => {
@@ -88,15 +88,9 @@ export default function SidebarClient({ initialChats, user }: Props) {
     };
   }, []);
 
-  const startEditing = (chat: Chat) => {
+  const startChatEditing = (chat: Chat) => {
     setOpenMenuChatId(null);
-    setEditingChatId(chat.id);
-    setEditingTitle(chat.title);
-  };
-
-  const cancelEditing = () => {
-    setEditingChatId(null);
-    setEditingTitle('');
+    startEditing(chat);
   };
 
   const toggleRecent = () => {
@@ -109,18 +103,12 @@ export default function SidebarClient({ initialChats, user }: Props) {
     setIsRecentOpen((prev) => !prev);
   };
 
-  const saveEditing = async (chatId: string) => {
-    const nextTitle = editingTitle.trim();
-
-    if (!nextTitle) {
-      cancelEditing();
-      return;
+  const saveChatEditing = async (chatId: string) => {
+    const saved = await saveEditing(chatId);
+    if (saved) {
+      setOpenMenuChatId(null);
+      setChatMenuPosition(null);
     }
-
-    await renameChat(chatId, nextTitle);
-    cancelEditing();
-    setOpenMenuChatId(null);
-    setChatMenuPosition(null);
   };
 
   const deleteChat = async (chatId: string) => {
@@ -246,8 +234,8 @@ export default function SidebarClient({ initialChats, user }: Props) {
               onDeleteChat={(chatId) => void deleteChat(chatId)}
               onEditingTitleChange={setEditingTitle}
               onOpenChatMenu={openChatMenu}
-              onSaveEditing={(chatId) => void saveEditing(chatId)}
-              onStartEditing={startEditing}
+              onSaveEditing={(chatId) => void saveChatEditing(chatId)}
+              onStartEditing={startChatEditing}
               onToggleOpen={toggleRecent}
               openMenuChatId={openMenuChatId}
             />
