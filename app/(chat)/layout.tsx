@@ -16,7 +16,7 @@ export default async function ChatLayout({ children }: { children: React.ReactNo
   return (
     <div className="flex h-screen bg-background text-foreground">
       <aside className="flex h-full w-64 shrink-0 border-r border-border bg-muted/50">
-        <Sidebar />
+        <Sidebar user={user} />
       </aside>
       <main className="flex min-w-0 flex-1 bg-background">{children}</main>
     </div>
