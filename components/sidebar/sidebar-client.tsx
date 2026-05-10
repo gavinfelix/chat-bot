@@ -230,15 +230,15 @@ export default function SidebarClient({ initialChats, user }: Props) {
   );
 
   return (
-    <div className="flex h-full w-full flex-col p-2" ref={sidebarRef}>
+    <div className="flex h-full w-full min-w-0 flex-col overflow-x-hidden bg-muted p-2" ref={sidebarRef}>
       <div
-        className="min-h-0 flex-1 overflow-y-auto pb-4"
+        className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto bg-muted pb-4"
         onScroll={() => {
           setOpenMenuChatId(null);
           setChatMenuPosition(null);
         }}
       >
-        <div className="sticky top-0 z-10 space-y-3 pb-4">
+        <div className="sticky top-0 z-20 space-y-3 bg-muted pb-4">
           <button
             className="flex h-10 items-center rounded-xl px-2 text-left text-base font-semibold text-foreground"
             onClick={() => router.push('/')}
