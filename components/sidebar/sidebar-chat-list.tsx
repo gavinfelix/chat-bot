@@ -58,7 +58,7 @@ export default function RecentChats({
         type="button"
         aria-expanded={isOpen}
         aria-controls="recent-chat-list"
-        className="mx-2 mb-2 flex h-8 w-[calc(100%-1rem)] items-center justify-between rounded-lg px-2 text-sm font-semibold tracking-wide text-foreground transition-colors hover:bg-muted"
+        className="mx-2 mb-2 flex h-8 items-center gap-1 px-2 text-sm font-semibold tracking-wide text-foreground"
         onClick={onToggleOpen}
       >
         <span>Recents</span>
