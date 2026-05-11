@@ -104,7 +104,7 @@ export default function RecentChats({
                     className={cn(
                       'block rounded-lg px-2 py-2 pr-10 text-sm transition-colors',
                       chat.id === currentChatId
-                        ? 'bg-muted text-foreground dark:bg-[rgb(47,47,47)] dark:text-white'
+                        ? 'bg-muted text-foreground dark:bg-[#2f2f2f] dark:text-white'
                         : 'text-foreground hover:bg-muted group-hover:bg-muted',
                     )}
                   >

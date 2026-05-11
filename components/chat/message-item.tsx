@@ -18,7 +18,7 @@ function MessageTextParts({ message, markdown }: { message: UIMessage; markdown?
 export function UserMessage({ message }: { message: UIMessage }) {
   return (
     <div className="flex w-full justify-end">
-      <div className="max-w-[80%] rounded-3xl bg-sidebar-accent px-4 py-2.5 text-sm leading-6 text-sidebar-accent-foreground dark:bg-[rgb(47,47,47)] dark:text-white">
+      <div className="max-w-[80%] rounded-3xl bg-sidebar-accent px-4 py-2.5 text-sm leading-6 text-sidebar-accent-foreground dark:bg-[#2f2f2f] dark:text-white">
         <MessageTextParts message={message} />
       </div>
     </div>

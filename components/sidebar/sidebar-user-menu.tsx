@@ -31,7 +31,7 @@ const UserMenu = forwardRef<HTMLDivElement, Props>(function UserMenu(
     <div
       ref={ref}
       className={cn(
-        'z-50 rounded-2xl border border-border bg-popover p-3 text-popover-foreground shadow-xl dark:border-white/10 dark:bg-[rgb(52,52,52)] dark:text-white',
+        'z-50 rounded-2xl border border-border bg-popover p-3 text-popover-foreground shadow-xl dark:border-white/10 dark:bg-[#343434] dark:text-white',
         className,
       )}
     >
