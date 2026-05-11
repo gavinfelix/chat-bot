@@ -121,7 +121,7 @@ export default function CodeBlock({ children, className, ...props }: Props) {
         {...props}
         className={cn(
           'chat-code-scrollbar max-h-[60vh] overflow-auto rounded-b-3xl bg-sidebar-accent px-0 pt-1 pb-3 text-[13px] leading-6 dark:bg-[#181818]',
-          '[&_code]:block [&_code]:bg-transparent [&_code]:!p-0 [&_code]:font-mono [&_code]:text-[13px] [&_code]:text-inherit',
+          '[&_code]:block [&_code]:!bg-transparent [&_code]:!p-0 [&_code]:font-mono [&_code]:text-[13px] [&_code]:text-inherit',
           '[&_code]:min-w-max [&_code]:!pr-5 [&_code]:!pl-5',
           className,
         )}
