@@ -8,6 +8,7 @@ import Messages from './messages';
 import { useChat } from '@ai-sdk/react';
 import { DbMessage } from '@/lib/ai/types';
 import AppHeader from '@/components/layout/app-header';
+import { cn } from '@/lib/utils';
 
 type Props = {
   chatId: string;
@@ -125,7 +126,7 @@ export default function ChatPage({ chatId }: Props) {
   };
 
   return (
-    <div className="h-full min-w-0 flex-1 overflow-y-auto bg-background text-foreground">
+    <div className="chat-page-scrollbar h-full min-w-0 flex-1 overflow-y-scroll bg-background text-foreground">
       <AppHeader
         pointerOverlay
         className="sticky top-0 z-20 h-12 bg-transparent"
@@ -137,7 +138,10 @@ export default function ChatPage({ chatId }: Props) {
               type="button"
               aria-label="More actions"
               aria-expanded={isActionsOpen}
-              className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition hover:bg-muted hover:text-foreground"
+              className={cn(
+                'flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition hover:bg-muted hover:text-foreground dark:hover:bg-white/10',
+                isActionsOpen && 'bg-muted text-foreground dark:bg-[rgb(52,52,52)] dark:text-white',
+              )}
               onClick={() => setIsActionsOpen((prev) => !prev)}
             >
               <Ellipsis className="h-4 w-4" aria-hidden="true" />

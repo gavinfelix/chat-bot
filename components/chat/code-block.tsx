@@ -93,8 +93,8 @@ export default function CodeBlock({ children, className, ...props }: Props) {
   };
 
   return (
-    <div className="chat-code-block my-2 overflow-hidden rounded-3xl bg-sidebar-accent text-foreground shadow-sm ring-1 ring-border/60 dark:bg-[rgb(24,24,24)] dark:text-white dark:ring-white/10">
-      <div className="flex h-10 items-center justify-between pt-1 pr-3 pl-5">
+    <div className="chat-code-block my-2 rounded-3xl bg-sidebar-accent text-foreground shadow-sm ring-1 ring-border/60 dark:bg-[rgb(24,24,24)] dark:text-white dark:ring-white/10">
+      <div className="sticky top-0 z-10 flex h-10 items-center justify-between rounded-t-3xl bg-sidebar-accent pt-1 pr-3 pl-5 dark:bg-[rgb(24,24,24)]">
         <div className="flex min-w-0 items-center gap-2.5">
           <Code2
             className="h-3.5 w-3.5 shrink-0 text-foreground dark:text-white"
@@ -107,7 +107,7 @@ export default function CodeBlock({ children, className, ...props }: Props) {
         <button
           type="button"
           aria-label={copied ? 'Copied code' : 'Copy code'}
-          className="flex h-8 w-8 items-center justify-center rounded-lg text-foreground transition hover:bg-background dark:text-white dark:hover:bg-white/10"
+          className="flex h-8 w-8 items-center justify-center rounded-full text-foreground transition hover:bg-muted-foreground/15 dark:text-white dark:hover:bg-white/10"
           onClick={() => void copyCode()}
         >
           {copied ? (
@@ -120,7 +120,7 @@ export default function CodeBlock({ children, className, ...props }: Props) {
       <pre
         {...props}
         className={cn(
-          'chat-code-scrollbar max-h-[50vh] overflow-auto bg-sidebar-accent px-0 pt-1 pb-3 text-[13px] leading-6 dark:bg-[rgb(24,24,24)]',
+          'chat-code-scrollbar max-h-[60vh] overflow-auto rounded-b-3xl bg-sidebar-accent px-0 pt-1 pb-3 text-[13px] leading-6 dark:bg-[rgb(24,24,24)]',
           '[&_code]:block [&_code]:bg-transparent [&_code]:!p-0 [&_code]:font-mono [&_code]:text-[13px] [&_code]:text-inherit',
           '[&_code]:min-w-max [&_code]:!pr-5 [&_code]:!pl-5',
           className,
