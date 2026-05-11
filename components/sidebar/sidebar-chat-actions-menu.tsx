@@ -34,7 +34,7 @@ const ChatActionsMenu = forwardRef<HTMLDivElement, Props>(function ChatActionsMe
   return (
     <div
       ref={ref}
-      className="fixed z-50 w-[230px] rounded-3xl border border-border bg-popover p-3 text-popover-foreground shadow-2xl dark:border-white/10 dark:bg-[rgb(52,52,52)] dark:text-white"
+      className="fixed z-50 w-[230px] rounded-3xl border border-border bg-popover p-3 text-popover-foreground shadow-2xl dark:border-white/10 dark:bg-[#343434] dark:text-white"
       style={{
         top: position.top,
         left: position.left,

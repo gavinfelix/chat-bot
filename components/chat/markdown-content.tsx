@@ -1,7 +1,9 @@
 import ReactMarkdown, { type Components } from 'react-markdown';
+import rehypeHighlight from 'rehype-highlight';
 import remarkGfm from 'remark-gfm';
 
 import { cn } from '@/lib/utils';
+import CodeBlock from './code-block';
 
 type Props = {
   content: string;
@@ -28,11 +30,15 @@ const markdownComponents: Components = {
     );
   },
   code({ children, className, ...props }) {
+    const isBlockCode = className?.includes('hljs') || className?.includes('language-');
+
     return (
       <code
         {...props}
         className={cn(
-          'rounded bg-muted px-1.5 py-0.5 font-mono text-[0.9em] text-foreground',
+          isBlockCode
+            ? 'font-mono'
+            : 'rounded bg-muted px-1.5 py-0.5 font-mono text-[0.9em] text-foreground',
           className,
         )}
       >
@@ -69,11 +75,7 @@ const markdownComponents: Components = {
     return <p className="my-1.5 whitespace-pre-wrap first:mt-0 last:mb-0">{children}</p>;
   },
   pre({ children }) {
-    return (
-      <pre className="my-2 overflow-x-auto rounded-lg bg-muted p-3 text-[13px] leading-5 text-foreground [&_code]:bg-transparent [&_code]:p-0 [&_code]:text-[13px] [&_code]:text-inherit">
-        {children}
-      </pre>
-    );
+    return <CodeBlock>{children}</CodeBlock>;
   },
   table({ children }) {
     return (
@@ -108,6 +110,7 @@ export default function MarkdownContent({ content }: Props) {
     <div className="text-sm leading-6 text-foreground">
       <ReactMarkdown
         components={markdownComponents}
+        rehypePlugins={[rehypeHighlight]}
         remarkPlugins={[remarkGfm]}
         skipHtml
         unwrapDisallowed
