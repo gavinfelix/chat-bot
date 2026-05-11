@@ -52,7 +52,7 @@ export default function SidebarUserSection({
         aria-expanded={isOpen}
         className={cn(
           'flex h-12 w-full items-center gap-2.5 rounded-xl px-2 transition-colors hover:bg-muted dark:hover:bg-white/10',
-          isOpen && 'bg-muted dark:bg-[rgb(13,13,13)] dark:text-white',
+          isOpen && 'bg-muted dark:bg-white/10 dark:text-white',
         )}
         onClick={onToggle}
       >
