@@ -7,7 +7,7 @@ type Props = {
   setInput: (val: string) => void;
 };
 
-export default function ChatInput({ sendMessage, input, setInput }: Props) {
+export default function ChatComposer({ sendMessage, input, setInput }: Props) {
   return (
     <div className="pointer-events-auto mx-auto flex w-full max-w-3xl items-end gap-3 rounded-[28px] border border-border bg-card p-3 shadow-sm">
       <Input

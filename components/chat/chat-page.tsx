@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Ellipsis, Trash2 } from 'lucide-react';
-import ChatInput from './chat-input';
+import ChatComposer from './chat-composer';
 import Messages from './messages';
 import { useChat } from '@ai-sdk/react';
 import { DbMessage } from '@/lib/ai/types';
@@ -170,7 +170,7 @@ export default function ChatPage({ chatId }: Props) {
 
         <div className="absolute inset-x-0 bottom-10 px-6">
           <div className="pointer-events-auto mx-auto max-w-3xl">
-            <ChatInput sendMessage={triggerSend} input={input} setInput={setInput} />
+            <ChatComposer sendMessage={triggerSend} input={input} setInput={setInput} />
           </div>
         </div>
 
