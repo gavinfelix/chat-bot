@@ -43,19 +43,40 @@ function getLanguage(className: string) {
   const language = className.match(/(?:^|\s)language-([^\s]+)/)?.[1];
 
   if (!language || ['plaintext', 'txt', 'text'].includes(language.toLowerCase())) {
-    return 'text';
+    return 'Text';
   }
 
   const labelByLanguage: Record<string, string> = {
+    bash: 'Bash',
+    css: 'CSS',
+    html: 'HTML',
     js: 'JavaScript',
     javascript: 'JavaScript',
+    json: 'JSON',
     jsx: 'JSX',
+    md: 'Markdown',
+    markdown: 'Markdown',
+    py: 'Python',
+    python: 'Python',
+    sh: 'Shell',
     ts: 'TypeScript',
     tsx: 'TSX',
     typescript: 'TypeScript',
+    xml: 'XML',
+    yaml: 'YAML',
+    yml: 'YAML',
   };
 
-  return labelByLanguage[language.toLowerCase()] ?? language;
+  const normalizedLanguage = language.toLowerCase();
+
+  return (
+    labelByLanguage[normalizedLanguage] ??
+    normalizedLanguage
+      .split(/[-_]/)
+      .filter(Boolean)
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(' ')
+  );
 }
 
 export default function CodeBlock({ children, className, ...props }: Props) {
@@ -73,7 +94,7 @@ export default function CodeBlock({ children, className, ...props }: Props) {
 
   return (
     <div className="chat-code-block my-2 overflow-hidden rounded-3xl bg-sidebar-accent text-foreground shadow-sm ring-1 ring-border/60 dark:bg-[rgb(24,24,24)] dark:text-white dark:ring-white/10">
-      <div className="flex h-12 items-center justify-between py-0.5 pr-3 pl-5">
+      <div className="flex h-10 items-center justify-between pt-1 pr-3 pl-5">
         <div className="flex min-w-0 items-center gap-2.5">
           <Code2 className="h-3.5 w-3.5 shrink-0 text-foreground dark:text-white" aria-hidden="true" />
           <span className="truncate text-sm font-semibold tracking-normal text-foreground dark:text-white">
@@ -96,8 +117,9 @@ export default function CodeBlock({ children, className, ...props }: Props) {
       <pre
         {...props}
         className={cn(
-          'overflow-x-auto px-5 pt-2 pb-5 text-[13px] leading-6',
-          '[&_code]:block [&_code]:bg-transparent [&_code]:p-0 [&_code]:font-mono [&_code]:text-[13px] [&_code]:text-inherit',
+          'overflow-x-auto px-0 pt-1 pb-3 text-[13px] leading-6',
+          '[&_code]:block [&_code]:bg-transparent [&_code]:!p-0 [&_code]:font-mono [&_code]:text-[13px] [&_code]:text-inherit',
+          '[&_code]:min-w-max [&_code]:!pr-5 [&_code]:!pl-5',
           className,
         )}
       >
