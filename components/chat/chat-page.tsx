@@ -160,22 +160,23 @@ export default function ChatPage({ chatId }: Props) {
       />
 
       {/* Main content */}
-      <main className="min-h-[calc(100%-48px)] px-6 pt-2 pb-44">
+      <main className="min-h-[calc(100%-48px)] px-6 pt-2 pb-32">
         <Messages messages={messages} />
       </main>
 
       {/* Composer overlay */}
-      <div className="pointer-events-none sticky bottom-0 z-20 -mt-44">
-        <div className="h-44 bg-gradient-to-t from-background via-background/95 to-transparent" />
+      <div className="pointer-events-none sticky bottom-0 z-20 -mt-32">
+        <div className="h-32" />
+        <div className="absolute inset-x-0 bottom-0 h-20 bg-background" />
 
-        <div className="absolute inset-x-0 bottom-10 px-6">
+        <div className="absolute inset-x-0 bottom-8 px-6">
           <div className="pointer-events-auto mx-auto max-w-3xl">
             <ChatComposer sendMessage={triggerSend} input={input} setInput={setInput} />
           </div>
         </div>
 
-        <div className="absolute inset-x-0 bottom-3 flex justify-center px-6">
-          <p className="text-center text-xs text-muted-foreground">
+        <div className="absolute inset-x-0 bottom-2 flex justify-center px-6">
+          <p className="text-center text-[11px] leading-4 text-muted-foreground">
             Chat Bot can make mistakes. Check important info.
           </p>
         </div>
