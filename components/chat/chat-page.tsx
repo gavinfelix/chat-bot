@@ -1,6 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
+import { Ellipsis, Trash2 } from 'lucide-react';
 import ChatInput from './chat-input';
 import Messages from './messages';
 import { useChat } from '@ai-sdk/react';
@@ -12,12 +14,29 @@ type Props = {
 };
 
 export default function ChatPage({ chatId }: Props) {
+  const router = useRouter();
   const { messages, setMessages, sendMessage } = useChat({
     onFinish: () => {
       window.dispatchEvent(new Event('chats:refresh'));
     },
   });
   const [input, setInput] = useState('');
+  const [isActionsOpen, setIsActionsOpen] = useState(false);
+  const actionsMenuRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const handlePointerDown = (event: MouseEvent) => {
+      if (!actionsMenuRef.current?.contains(event.target as Node)) {
+        setIsActionsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handlePointerDown);
+
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown);
+    };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -85,6 +104,26 @@ export default function ChatPage({ chatId }: Props) {
     setInput('');
   };
 
+  const deleteChat = async () => {
+    const confirmed = window.confirm('Delete this chat?');
+
+    if (!confirmed) return;
+
+    const res = await fetch(`/api/chats/${chatId}`, {
+      method: 'DELETE',
+    });
+
+    if (!res.ok) {
+      console.error('Delete chat failed');
+      return;
+    }
+
+    setIsActionsOpen(false);
+    window.dispatchEvent(new Event('chats:refresh'));
+    router.push('/');
+    router.refresh();
+  };
+
   return (
     <div className="h-full min-w-0 flex-1 overflow-y-auto bg-background text-foreground">
       <AppHeader
@@ -93,13 +132,30 @@ export default function ChatPage({ chatId }: Props) {
         title="Chat"
         titleClassName="select-text text-muted-foreground"
         actions={
-          <button
-            type="button"
-            aria-label="More actions"
-            className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition hover:bg-muted hover:text-foreground"
-          >
-            <span className="text-base leading-none">...</span>
-          </button>
+          <div className="relative" ref={actionsMenuRef}>
+            <button
+              type="button"
+              aria-label="More actions"
+              aria-expanded={isActionsOpen}
+              className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition hover:bg-muted hover:text-foreground"
+              onClick={() => setIsActionsOpen((prev) => !prev)}
+            >
+              <Ellipsis className="h-4 w-4" aria-hidden="true" />
+            </button>
+
+            {isActionsOpen ? (
+              <div className="absolute top-10 right-0 z-50 w-[230px] rounded-3xl border border-border bg-popover p-3 text-popover-foreground shadow-2xl dark:border-white/10 dark:bg-[rgb(52,52,52)] dark:text-white">
+                <button
+                  type="button"
+                  className="flex h-11 w-full items-center gap-3 rounded-xl px-3 text-left text-sm text-red-400 hover:bg-muted dark:hover:bg-white/10"
+                  onClick={() => void deleteChat()}
+                >
+                  <Trash2 className="h-5 w-5" aria-hidden="true" />
+                  <span className="min-w-0 flex-1 truncate">Delete</span>
+                </button>
+              </div>
+            ) : null}
+          </div>
         }
       />
 

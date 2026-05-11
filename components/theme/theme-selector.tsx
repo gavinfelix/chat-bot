@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState, useSyncExternalStore, type ComponentType } from 'react';
-import { Monitor, Moon, Sun } from 'lucide-react';
+import { Moon, Sun } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
   getThemeSnapshot,
@@ -17,8 +17,17 @@ const themeOptions: Array<{
 }> = [
   { mode: 'light', label: 'Light', icon: Sun },
   { mode: 'dark', label: 'Dark', icon: Moon },
-  { mode: 'system', label: 'System', icon: Monitor },
+  { mode: 'system', label: 'System', icon: SystemThemeIcon },
 ];
+
+function SystemThemeIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 16 16" className={className} aria-hidden="true">
+      <circle cx="8" cy="8" r="6.25" fill="none" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M8 1.75a6.25 6.25 0 0 0 0 12.5Z" fill="currentColor" />
+    </svg>
+  );
+}
 
 export default function ThemeSelector() {
   const [isOpen, setIsOpen] = useState(false);
