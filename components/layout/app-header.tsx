@@ -24,7 +24,7 @@ export default function AppHeader({
   return (
     <header
       className={cn(
-        'flex items-center justify-between px-6',
+        'flex items-center justify-between pr-4 pl-6',
         pointerOverlay && 'pointer-events-none',
         className,
       )}
