@@ -5,6 +5,7 @@ import ChatInput from './chat-input';
 import Messages from './messages';
 import { useChat } from '@ai-sdk/react';
 import { DbMessage } from '@/lib/ai/types';
+import AppHeader from '@/components/layout/app-header';
 
 type Props = {
   chatId: string;
@@ -86,20 +87,21 @@ export default function ChatPage({ chatId }: Props) {
 
   return (
     <div className="h-full min-w-0 flex-1 overflow-y-auto bg-background text-foreground">
-      {/* Header overlay, inside scroll container */}
-      <header className="pointer-events-none sticky top-0 z-20 flex h-12 items-center justify-between bg-transparent px-6">
-        <h1 className="pointer-events-auto select-text text-sm font-medium text-muted-foreground">
-          Chat
-        </h1>
-
-        <button
-          type="button"
-          aria-label="More actions"
-          className="pointer-events-auto flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition hover:bg-muted hover:text-foreground"
-        >
-          <span className="text-base leading-none">...</span>
-        </button>
-      </header>
+      <AppHeader
+        pointerOverlay
+        className="sticky top-0 z-20 h-12 bg-transparent"
+        title="Chat"
+        titleClassName="select-text text-muted-foreground"
+        actions={
+          <button
+            type="button"
+            aria-label="More actions"
+            className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition hover:bg-muted hover:text-foreground"
+          >
+            <span className="text-base leading-none">...</span>
+          </button>
+        }
+      />
 
       {/* Main content */}
       <main className="min-h-[calc(100%-48px)] px-6 pt-2 pb-44">
