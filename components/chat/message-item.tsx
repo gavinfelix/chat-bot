@@ -1,13 +1,12 @@
 import { UIMessage } from 'ai';
+import MarkdownContent from './markdown-content';
 
 function MessageTextParts({ message }: { message: UIMessage }) {
   return message.parts.map((part, index) => {
     if (part.type !== 'text') return null;
 
     return (
-      <div className="whitespace-pre-wrap break-words" key={`${message.id}-${index}`}>
-        {part.text}
-      </div>
+      <MarkdownContent content={part.text} key={`${message.id}-${index}`} />
     );
   });
 }
