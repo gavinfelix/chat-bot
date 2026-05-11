@@ -1,12 +1,16 @@
 import { UIMessage } from 'ai';
 import MarkdownContent from './markdown-content';
 
-function MessageTextParts({ message }: { message: UIMessage }) {
+function MessageTextParts({ message, markdown }: { message: UIMessage; markdown?: boolean }) {
   return message.parts.map((part, index) => {
     if (part.type !== 'text') return null;
 
-    return (
+    return markdown ? (
       <MarkdownContent content={part.text} key={`${message.id}-${index}`} />
+    ) : (
+      <div className="whitespace-pre-wrap break-words" key={`${message.id}-${index}`}>
+        {part.text}
+      </div>
     );
   });
 }
@@ -23,8 +27,8 @@ export function UserMessage({ message }: { message: UIMessage }) {
 
 export function AssistantMessage({ message }: { message: UIMessage }) {
   return (
-    <div className="w-full text-sm leading-6 text-foreground">
-      <MessageTextParts message={message} />
+    <div className="w-full text-foreground">
+      <MessageTextParts markdown message={message} />
     </div>
   );
 }
