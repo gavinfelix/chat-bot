@@ -48,6 +48,102 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+:root:not(.dark) .chat-code-block .hljs {
+  color: #24292e;
+  background: transparent;
+}
+
+:root:not(.dark) .chat-code-block .hljs-doctag,
+:root:not(.dark) .chat-code-block .hljs-keyword,
+:root:not(.dark) .chat-code-block .hljs-meta .hljs-keyword,
+:root:not(.dark) .chat-code-block .hljs-template-tag,
+:root:not(.dark) .chat-code-block .hljs-template-variable,
+:root:not(.dark) .chat-code-block .hljs-type,
+:root:not(.dark) .chat-code-block .hljs-variable.language_ {
+  color: #d73a49;
+}
+
+:root:not(.dark) .chat-code-block .hljs-title,
+:root:not(.dark) .chat-code-block .hljs-title.class_,
+:root:not(.dark) .chat-code-block .hljs-title.class_.inherited__,
+:root:not(.dark) .chat-code-block .hljs-title.function_ {
+  color: #6f42c1;
+}
+
+:root:not(.dark) .chat-code-block .hljs-attr,
+:root:not(.dark) .chat-code-block .hljs-attribute,
+:root:not(.dark) .chat-code-block .hljs-literal,
+:root:not(.dark) .chat-code-block .hljs-meta,
+:root:not(.dark) .chat-code-block .hljs-number,
+:root:not(.dark) .chat-code-block .hljs-operator,
+:root:not(.dark) .chat-code-block .hljs-variable,
+:root:not(.dark) .chat-code-block .hljs-selector-attr,
+:root:not(.dark) .chat-code-block .hljs-selector-class,
+:root:not(.dark) .chat-code-block .hljs-selector-id {
+  color: #005cc5;
+}
+
+:root:not(.dark) .chat-code-block .hljs-regexp,
+:root:not(.dark) .chat-code-block .hljs-string,
+:root:not(.dark) .chat-code-block .hljs-meta .hljs-string {
+  color: #032f62;
+}
+
+:root:not(.dark) .chat-code-block .hljs-built_in,
+:root:not(.dark) .chat-code-block .hljs-symbol {
+  color: #e36209;
+}
+
+:root:not(.dark) .chat-code-block .hljs-comment,
+:root:not(.dark) .chat-code-block .hljs-code,
+:root:not(.dark) .chat-code-block .hljs-formula {
+  color: #6a737d;
+}
+
+:root:not(.dark) .chat-code-block .hljs-name,
+:root:not(.dark) .chat-code-block .hljs-quote,
+:root:not(.dark) .chat-code-block .hljs-selector-tag,
+:root:not(.dark) .chat-code-block .hljs-selector-pseudo {
+  color: #22863a;
+}
+
+:root:not(.dark) .chat-code-block .hljs-subst,
+:root:not(.dark) .chat-code-block .hljs-emphasis,
+:root:not(.dark) .chat-code-block .hljs-strong {
+  color: #24292e;
+}
+
+:root:not(.dark) .chat-code-block .hljs-section {
+  color: #005cc5;
+  font-weight: bold;
+}
+
+:root:not(.dark) .chat-code-block .hljs-bullet {
+  color: #735c0f;
+}
+
+:root:not(.dark) .chat-code-block .hljs-emphasis {
+  font-style: italic;
+}
+
+:root:not(.dark) .chat-code-block .hljs-strong {
+  font-weight: bold;
+}
+
+:root:not(.dark) .chat-code-block .hljs-addition {
+  color: #22863a;
+  background-color: #f0fff4;
+}
+
+:root:not(.dark) .chat-code-block .hljs-deletion {
+  color: #b31d28;
+  background-color: #ffeef0;
+}
+
+.dark .chat-code-block .hljs {
+  background: transparent;
+}
+
 :root {
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
