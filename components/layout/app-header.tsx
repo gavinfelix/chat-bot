@@ -1,0 +1,54 @@
+import type { ReactNode } from 'react';
+import { cn } from '@/lib/utils';
+import ThemeSelector from '@/components/theme/theme-selector';
+
+type Props = {
+  actions?: ReactNode;
+  className?: string;
+  contentClassName?: string;
+  pointerOverlay?: boolean;
+  subtitle?: ReactNode;
+  title: ReactNode;
+  titleClassName?: string;
+};
+
+export default function AppHeader({
+  actions,
+  className,
+  contentClassName,
+  pointerOverlay = false,
+  subtitle,
+  title,
+  titleClassName,
+}: Props) {
+  return (
+    <header
+      className={cn(
+        'flex items-center justify-between pr-4 pl-6',
+        pointerOverlay && 'pointer-events-none',
+        className,
+      )}
+    >
+      <div
+        className={cn(
+          'min-w-0',
+          pointerOverlay && 'pointer-events-auto',
+          contentClassName,
+        )}
+      >
+        <div className={cn('truncate text-sm font-medium', titleClassName)}>{title}</div>
+      </div>
+
+      <div
+        className={cn(
+          'flex shrink-0 items-center gap-3',
+          pointerOverlay && 'pointer-events-auto',
+        )}
+      >
+        {subtitle ? <div className="text-xs text-muted-foreground">{subtitle}</div> : null}
+        {actions}
+        <ThemeSelector />
+      </div>
+    </header>
+  );
+}

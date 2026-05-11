@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useRouter } from 'next/navigation';
-import ThemeSelector from '@/components/theme/theme-selector';
+import AppHeader from '@/components/layout/app-header';
 
 export default function Home() {
   const [input, setInput] = useState<string>('');
@@ -49,13 +49,11 @@ export default function Home() {
 
   return (
     <div className="flex h-full min-w-0 flex-1 flex-col bg-background text-foreground transition-colors">
-      <header className="flex h-14 items-center justify-between px-6">
-        <div className="text-sm font-medium">Chat Bot</div>
-        <div className="flex items-center gap-3">
-          <div className="text-xs text-muted-foreground">New conversation</div>
-          <ThemeSelector />
-        </div>
-      </header>
+      <AppHeader
+        className="h-14"
+        title="Chat Bot"
+        subtitle="New conversation"
+      />
 
       <div className="flex flex-1 items-center justify-center px-6 pb-14">
         <div className="flex w-full max-w-3xl flex-col items-center text-center">
