@@ -50,7 +50,10 @@ export default function SidebarUserSection({
         type="button"
         aria-label="User menu"
         aria-expanded={isOpen}
-        className="flex h-12 w-full items-center gap-2.5 rounded-xl px-2 transition-colors hover:bg-muted"
+        className={cn(
+          'flex h-12 w-full items-center gap-2.5 rounded-xl px-2 transition-colors hover:bg-muted dark:hover:bg-white/10',
+          isOpen && 'bg-muted dark:bg-[rgb(52,52,52)] dark:text-white',
+        )}
         onClick={onToggle}
       >
         <UserAvatar initials={user.initials} />

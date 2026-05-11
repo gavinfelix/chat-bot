@@ -31,7 +31,7 @@ const UserMenu = forwardRef<HTMLDivElement, Props>(function UserMenu(
     <div
       ref={ref}
       className={cn(
-        'z-50 rounded-2xl border border-border bg-popover p-3 text-popover-foreground shadow-xl',
+        'z-50 rounded-2xl border border-border bg-popover p-3 text-popover-foreground shadow-xl dark:border-white/10 dark:bg-[rgb(52,52,52)] dark:text-white',
         className,
       )}
     >
@@ -44,45 +44,45 @@ const UserMenu = forwardRef<HTMLDivElement, Props>(function UserMenu(
         <ChevronRight className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
       </div>
 
-      <div className="my-3 h-px bg-border" />
+      <div className="my-3 h-px bg-border dark:bg-white/15" />
 
       <div className="space-y-1">
         <button
           type="button"
-          className="flex h-10 w-full items-center gap-3 rounded-xl px-3 text-left text-sm hover:bg-muted"
+          className="flex h-10 w-full items-center gap-3 rounded-xl px-3 text-left text-sm hover:bg-muted dark:hover:bg-white/10"
         >
           <Sparkles className="h-5 w-5" aria-hidden="true" />
           <span className="min-w-0 flex-1 truncate">Upgrade plan</span>
         </button>
         <button
           type="button"
-          className="flex h-10 w-full items-center gap-3 rounded-xl px-3 text-left text-sm hover:bg-muted"
+          className="flex h-10 w-full items-center gap-3 rounded-xl px-3 text-left text-sm hover:bg-muted dark:hover:bg-white/10"
         >
           <SlidersHorizontal className="h-5 w-5" aria-hidden="true" />
           <span className="min-w-0 flex-1 truncate">Personalization</span>
         </button>
         <button
           type="button"
-          className="flex h-10 w-full items-center gap-3 rounded-xl px-3 text-left text-sm hover:bg-muted"
+          className="flex h-10 w-full items-center gap-3 rounded-xl px-3 text-left text-sm hover:bg-muted dark:hover:bg-white/10"
         >
           <CircleUserRound className="h-5 w-5" aria-hidden="true" />
           <span className="min-w-0 flex-1 truncate">Profile</span>
         </button>
         <button
           type="button"
-          className="flex h-10 w-full items-center gap-3 rounded-xl px-3 text-left text-sm hover:bg-muted"
+          className="flex h-10 w-full items-center gap-3 rounded-xl px-3 text-left text-sm hover:bg-muted dark:hover:bg-white/10"
         >
           <Settings className="h-5 w-5" aria-hidden="true" />
           <span className="min-w-0 flex-1 truncate">Settings</span>
         </button>
       </div>
 
-      <div className="my-3 h-px bg-border" />
+      <div className="my-3 h-px bg-border dark:bg-white/15" />
 
       <div className="space-y-1">
         <button
           type="button"
-          className="flex h-10 w-full items-center gap-3 rounded-xl px-3 text-left text-sm hover:bg-muted"
+          className="flex h-10 w-full items-center gap-3 rounded-xl px-3 text-left text-sm hover:bg-muted dark:hover:bg-white/10"
         >
           <LifeBuoy className="h-5 w-5" aria-hidden="true" />
           <span className="min-w-0 flex-1 truncate">Help</span>
@@ -90,7 +90,7 @@ const UserMenu = forwardRef<HTMLDivElement, Props>(function UserMenu(
         </button>
         <button
           type="button"
-          className="flex h-10 w-full items-center gap-3 rounded-xl px-3 text-left text-sm hover:bg-muted"
+          className="flex h-10 w-full items-center gap-3 rounded-xl px-3 text-left text-sm hover:bg-muted dark:hover:bg-white/10"
           onClick={onLogout}
         >
           <LogOut className="h-5 w-5" aria-hidden="true" />
