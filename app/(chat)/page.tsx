@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useRouter } from 'next/navigation';
-import ThemeSelector from '@/components/theme/theme-selector';
 import AppHeader from '@/components/layout/app-header';
 
 export default function Home() {
@@ -54,7 +53,6 @@ export default function Home() {
         className="h-14"
         title="Chat Bot"
         subtitle="New conversation"
-        actions={<ThemeSelector />}
       />
 
       <div className="flex flex-1 items-center justify-center px-6 pb-14">

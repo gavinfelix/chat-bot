@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { cn } from '@/lib/utils';
+import ThemeSelector from '@/components/theme/theme-selector';
 
 type Props = {
   actions?: ReactNode;
@@ -38,17 +39,16 @@ export default function AppHeader({
         <div className={cn('truncate text-sm font-medium', titleClassName)}>{title}</div>
       </div>
 
-      {actions || subtitle ? (
-        <div
-          className={cn(
-            'flex shrink-0 items-center gap-3',
-            pointerOverlay && 'pointer-events-auto',
-          )}
-        >
-          {subtitle ? <div className="text-xs text-muted-foreground">{subtitle}</div> : null}
-          {actions}
-        </div>
-      ) : null}
+      <div
+        className={cn(
+          'flex shrink-0 items-center gap-3',
+          pointerOverlay && 'pointer-events-auto',
+        )}
+      >
+        {subtitle ? <div className="text-xs text-muted-foreground">{subtitle}</div> : null}
+        {actions}
+        <ThemeSelector />
+      </div>
     </header>
   );
 }
