@@ -29,21 +29,12 @@ export default function AppHeader({
         className,
       )}
     >
-      <div
-        className={cn(
-          'min-w-0',
-          pointerOverlay && 'pointer-events-auto',
-          contentClassName,
-        )}
-      >
+      <div className={cn('min-w-0', pointerOverlay && 'pointer-events-auto', contentClassName)}>
         <div className={cn('truncate text-sm font-medium', titleClassName)}>{title}</div>
       </div>
 
       <div
-        className={cn(
-          'flex shrink-0 items-center gap-3',
-          pointerOverlay && 'pointer-events-auto',
-        )}
+        className={cn('flex shrink-0 items-center gap-3', pointerOverlay && 'pointer-events-auto')}
       >
         {subtitle ? <div className="text-xs text-muted-foreground">{subtitle}</div> : null}
         {actions}
