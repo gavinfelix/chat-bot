@@ -41,7 +41,7 @@ export default function SidebarUserSection({
           className={
             collapsed
               ? 'fixed bottom-16 left-2 w-[230px]'
-              : 'absolute right-0 bottom-full left-0 mb-2'
+              : 'absolute right-2 bottom-full left-2 mb-2'
           }
         />
       ) : null}
@@ -52,7 +52,7 @@ export default function SidebarUserSection({
         aria-expanded={isOpen}
         className={cn(
           'flex h-12 w-full items-center gap-2.5 rounded-xl px-2 transition-colors hover:bg-muted dark:hover:bg-white/10',
-          isOpen && 'bg-muted dark:bg-[rgb(52,52,52)] dark:text-white',
+          isOpen && 'bg-muted dark:bg-[rgb(13,13,13)] dark:text-white',
         )}
         onClick={onToggle}
       >
