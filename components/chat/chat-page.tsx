@@ -16,7 +16,7 @@ type Props = {
 
 export default function ChatPage({ chatId }: Props) {
   const router = useRouter();
-  const { messages, setMessages, sendMessage } = useChat({
+  const { messages, setMessages, sendMessage, status, stop } = useChat({
     onFinish: () => {
       window.dispatchEvent(new Event('chats:refresh'));
     },
@@ -24,6 +24,13 @@ export default function ChatPage({ chatId }: Props) {
   const [input, setInput] = useState('');
   const [isActionsOpen, setIsActionsOpen] = useState(false);
   const actionsMenuRef = useRef<HTMLDivElement | null>(null);
+  const composerRef = useRef<HTMLDivElement | null>(null);
+  const [composerHeight, setComposerHeight] = useState(56);
+  const composerOverlayHeight = composerHeight + 10;
+  const messagesBottomPadding = composerHeight + 100;
+  const composerBottomOffset = 32;
+  const disclaimerLineHeight = 16;
+  const disclaimerBottomOffset = composerBottomOffset / 2 - disclaimerLineHeight / 2;
 
   useEffect(() => {
     const handlePointerDown = (event: MouseEvent) => {
@@ -36,6 +43,22 @@ export default function ChatPage({ chatId }: Props) {
 
     return () => {
       document.removeEventListener('mousedown', handlePointerDown);
+    };
+  }, []);
+
+  useEffect(() => {
+    const composer = composerRef.current;
+
+    if (!composer) return;
+
+    const observer = new ResizeObserver(([entry]) => {
+      setComposerHeight(Math.ceil(entry.contentRect.height));
+    });
+
+    observer.observe(composer);
+
+    return () => {
+      observer.disconnect();
     };
   }, []);
 
@@ -164,22 +187,40 @@ export default function ChatPage({ chatId }: Props) {
       />
 
       {/* Main content */}
-      <main className="min-h-[calc(100%-48px)] px-6 pt-2 pb-32">
+      <main
+        className="min-h-[calc(100%-48px)] px-6 pt-2"
+        style={{ paddingBottom: messagesBottomPadding }}
+      >
         <Messages messages={messages} />
       </main>
 
       {/* Composer overlay */}
-      <div className="pointer-events-none sticky bottom-0 z-20 -mt-32">
-        <div className="h-32" />
-        <div className="absolute inset-x-0 bottom-0 h-20 bg-background" />
+      <div
+        className="pointer-events-none sticky bottom-0 z-20"
+        style={{ marginTop: -composerOverlayHeight }}
+      >
+        <div style={{ height: composerOverlayHeight }} />
+        <div
+          className="absolute inset-x-0 bottom-0 bg-background"
+          style={{ height: composerOverlayHeight }}
+        />
 
-        <div className="absolute inset-x-0 bottom-8 px-6">
-          <div className="pointer-events-auto mx-auto max-w-3xl">
-            <ChatComposer sendMessage={triggerSend} input={input} setInput={setInput} />
+        <div className="absolute inset-x-0 px-6" style={{ bottom: composerBottomOffset }}>
+          <div ref={composerRef} className="pointer-events-auto mx-auto max-w-3xl">
+            <ChatComposer
+              sendMessageAction={triggerSend}
+              status={status}
+              stopGeneratingAction={stop}
+              input={input}
+              setInputAction={setInput}
+            />
           </div>
         </div>
 
-        <div className="absolute inset-x-0 bottom-2 flex justify-center px-6">
+        <div
+          className="absolute inset-x-0 z-10 flex justify-center px-6"
+          style={{ bottom: disclaimerBottomOffset }}
+        >
           <p className="text-center text-[11px] leading-4 text-muted-foreground">
             Chat Bot can make mistakes. Check important info.
           </p>
