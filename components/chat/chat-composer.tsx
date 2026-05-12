@@ -48,11 +48,14 @@ export default function ChatComposer({ sendMessageAction, input, setInputAction 
     <div
       className={cn(
         'pointer-events-auto mx-auto flex w-full max-w-3xl rounded-[28px] border border-border bg-card shadow-sm transition-[padding,border-radius]',
-        hasText ? 'relative px-3 py-2' : 'min-h-16 items-center gap-3 px-3 py-2',
+        hasText ? 'relative px-3 pt-0 pb-2' : 'min-h-16 items-center gap-3 px-3 pt-0 pb-2',
       )}
     >
       <div
-        className={cn('flex min-w-0 flex-1', hasText ? 'w-full pb-14 pl-3' : 'items-center gap-4')}
+        className={cn(
+          'flex min-w-0 flex-1',
+          hasText ? 'relative w-full pt-0 pb-14 pl-3' : 'items-center gap-4',
+        )}
       >
         {!hasText ? (
           <button
@@ -73,6 +76,13 @@ export default function ChatComposer({ sendMessageAction, input, setInputAction 
           placeholder="Ask anything"
           className="chat-composer-textarea max-h-[308px] min-h-7 w-full resize-none border-0 bg-transparent px-0 text-[18px] leading-7 text-foreground outline-none placeholder:text-muted-foreground focus-visible:ring-0 md:text-[18px]"
         />
+
+        {hasText ? (
+          <>
+            <div className="pointer-events-none absolute top-0 right-0 left-0 h-0.5 bg-card/80 backdrop-blur-[1px]" />
+            <div className="pointer-events-none absolute right-0 bottom-14 left-0 h-0.5 bg-card/80 backdrop-blur-[1px]" />
+          </>
+        ) : null}
       </div>
 
       <div
