@@ -169,14 +169,18 @@
 .chat-composer-textarea {
   scrollbar-width: thin;
   scrollbar-color: color-mix(in oklch, var(--muted-foreground) 42%, transparent) transparent;
+  scrollbar-gutter: auto;
 }
 
 .chat-composer-textarea::-webkit-scrollbar {
   width: 5px;
+  background: transparent;
 }
 
 .chat-composer-textarea::-webkit-scrollbar-track {
-  background: transparent;
+  background: transparent !important;
+  border: 0;
+  box-shadow: none;
 }
 
 .chat-composer-textarea::-webkit-scrollbar-thumb {
@@ -184,8 +188,12 @@
   border-radius: 999px;
 }
 
+.chat-composer-textarea::-webkit-scrollbar-track-piece {
+  background: transparent !important;
+}
+
 .chat-composer-textarea::-webkit-scrollbar-corner {
-  background: transparent;
+  background: transparent !important;
 }
 
 :root {
