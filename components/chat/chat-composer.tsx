@@ -1,22 +1,34 @@
 'use client';
 
 import { useLayoutEffect, useRef, useState, type KeyboardEvent } from 'react';
-import { ArrowUp, AudioLines, ChevronDown, Mic, Plus } from 'lucide-react';
+import { ArrowUp, AudioLines, ChevronDown, LoaderCircle, Mic, Plus, Square } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 type Props = {
+  isLoading?: boolean;
   sendMessageAction: (msg: { text: string }) => void;
+  status?: 'submitted' | 'streaming' | 'ready' | 'error';
+  stopGeneratingAction?: () => void;
   input: string;
   setInputAction: (val: string) => void;
 };
 
 const MAX_TEXTAREA_ROWS = 11;
 
-export default function ChatComposer({ sendMessageAction, input, setInputAction }: Props) {
+export default function ChatComposer({
+  isLoading = false,
+  sendMessageAction,
+  status = 'ready',
+  stopGeneratingAction,
+  input,
+  setInputAction,
+}: Props) {
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
   const hasText = input.trim().length > 0;
   const isMultiline = hasText && isExpanded;
+  const isGenerating = status === 'submitted' || status === 'streaming';
+  const isBusy = isLoading || isGenerating;
 
   useLayoutEffect(() => {
     const textarea = textareaRef.current;
@@ -47,6 +59,17 @@ export default function ChatComposer({ sendMessageAction, input, setInputAction 
 
     setIsExpanded(false);
     sendMessageAction({ text: input });
+  };
+
+  const handlePrimaryAction = () => {
+    if (isGenerating) {
+      stopGeneratingAction?.();
+      return;
+    }
+
+    if (isLoading) return;
+
+    handleSubmit();
   };
 
   const handleInputChange = (value: string) => {
@@ -161,12 +184,18 @@ export default function ChatComposer({ sendMessageAction, input, setInputAction 
 
           <button
             type="button"
-            aria-label={hasText ? 'Send message' : 'Start voice chat'}
-            disabled={hasText ? false : undefined}
-            onClick={hasText ? handleSubmit : undefined}
+            aria-label={
+              isGenerating ? 'Stop generating' : hasText ? 'Send message' : 'Start voice chat'
+            }
+            disabled={isLoading}
+            onClick={isBusy || hasText ? handlePrimaryAction : undefined}
             className="flex size-9 items-center justify-center rounded-full bg-black text-white transition-colors hover:bg-black/90 disabled:opacity-100 dark:bg-white dark:text-black dark:hover:bg-white/90"
           >
-            {hasText ? (
+            {isLoading ? (
+              <LoaderCircle className="size-[18px] animate-spin" strokeWidth={2.4} aria-hidden="true" />
+            ) : isGenerating ? (
+              <Square className="size-3.5 fill-current" strokeWidth={2.4} aria-hidden="true" />
+            ) : hasText ? (
               <ArrowUp className="size-[18px]" strokeWidth={2.6} aria-hidden="true" />
             ) : (
               <AudioLines className="size-4" strokeWidth={2.4} aria-hidden="true" />

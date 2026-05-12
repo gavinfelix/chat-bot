@@ -16,7 +16,7 @@ type Props = {
 
 export default function ChatPage({ chatId }: Props) {
   const router = useRouter();
-  const { messages, setMessages, sendMessage } = useChat({
+  const { messages, setMessages, sendMessage, status, stop } = useChat({
     onFinish: () => {
       window.dispatchEvent(new Event('chats:refresh'));
     },
@@ -204,7 +204,13 @@ export default function ChatPage({ chatId }: Props) {
 
         <div className="absolute inset-x-0 bottom-10 px-6">
           <div ref={composerRef} className="pointer-events-auto mx-auto max-w-3xl">
-            <ChatComposer sendMessageAction={triggerSend} input={input} setInputAction={setInput} />
+            <ChatComposer
+              sendMessageAction={triggerSend}
+              status={status}
+              stopGeneratingAction={stop}
+              input={input}
+              setInputAction={setInput}
+            />
           </div>
         </div>
 

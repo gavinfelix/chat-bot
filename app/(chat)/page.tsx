@@ -60,6 +60,7 @@ export default function Home() {
 
           <div className="mt-8 w-full">
             <ChatComposer
+              isLoading={loading}
               sendMessageAction={createNewChat}
               input={input}
               setInputAction={setInput}
