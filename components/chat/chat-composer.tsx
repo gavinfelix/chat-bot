@@ -71,23 +71,25 @@ export default function ChatComposer({ sendMessageAction, input, setInputAction 
   return (
     <div
       className={cn(
-        'pointer-events-auto mx-auto flex w-full max-w-3xl rounded-[28px] border border-border bg-card shadow-sm transition-[padding,border-radius]',
-        isMultiline ? 'relative px-3 pt-0 pb-2' : 'min-h-16 items-center gap-3 px-3 pt-0 pb-2',
+        'pointer-events-auto mx-auto flex w-full max-w-3xl border border-border bg-card shadow-sm transition-[padding,border-radius]',
+        isMultiline
+          ? 'relative rounded-[28px] px-3 pt-0 pb-2'
+          : 'min-h-14 items-center gap-2 rounded-full px-2 py-1.5',
       )}
     >
       <div
         className={cn(
           'flex min-w-0 flex-1',
-          isMultiline ? 'relative w-full pt-0 pb-14 pl-3' : 'items-center gap-4',
+          isMultiline ? 'relative w-full pt-0 pb-14 pl-3' : 'items-center gap-2',
         )}
       >
         {!isMultiline ? (
           <button
             type="button"
             aria-label="Add attachment"
-            className="flex size-10 shrink-0 items-center justify-center rounded-full text-foreground transition-colors hover:bg-muted"
+            className="flex size-9 shrink-0 items-center justify-center rounded-full text-foreground transition-colors hover:bg-muted"
           >
-            <Plus className="size-6" strokeWidth={1.8} aria-hidden="true" />
+            <Plus className="size-5" strokeWidth={1.9} aria-hidden="true" />
           </button>
         ) : null}
 
@@ -100,8 +102,8 @@ export default function ChatComposer({ sendMessageAction, input, setInputAction 
           placeholder="Ask anything"
           wrap={isMultiline ? 'soft' : 'off'}
           className={cn(
-            'chat-composer-textarea min-h-7 w-full resize-none border-0 bg-transparent px-0 text-[18px] leading-7 text-foreground outline-none placeholder:text-muted-foreground focus-visible:ring-0 md:text-[18px]',
-            isMultiline ? 'max-h-[308px]' : 'h-7 overflow-hidden',
+            'chat-composer-textarea w-full resize-none border-0 bg-transparent px-0 text-base text-foreground outline-none placeholder:text-muted-foreground focus-visible:ring-0 md:text-base',
+            isMultiline ? 'max-h-[308px] min-h-7 leading-7' : 'h-8 min-h-8 overflow-hidden leading-8',
           )}
         />
 
@@ -123,27 +125,27 @@ export default function ChatComposer({ sendMessageAction, input, setInputAction 
           <button
             type="button"
             aria-label="Add attachment"
-            className="flex size-10 shrink-0 items-center justify-center rounded-full text-foreground transition-colors hover:bg-muted"
+            className="flex size-9 shrink-0 items-center justify-center rounded-full text-foreground transition-colors hover:bg-muted"
           >
-            <Plus className="size-6" strokeWidth={1.8} aria-hidden="true" />
+            <Plus className="size-5" strokeWidth={1.9} aria-hidden="true" />
           </button>
         ) : null}
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <button
             type="button"
-            className="flex h-10 items-center gap-1 rounded-full px-2 text-[17px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            className="flex h-8 items-center gap-1 rounded-full px-1.5 text-sm leading-none text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           >
             <span>Thinking</span>
-            <ChevronDown className="size-4" aria-hidden="true" />
+            <ChevronDown className="size-3.5" aria-hidden="true" />
           </button>
 
           <button
             type="button"
             aria-label="Voice input"
-            className="flex size-10 items-center justify-center rounded-full text-foreground transition-colors hover:bg-muted"
+            className="flex size-8 items-center justify-center rounded-full text-foreground transition-colors hover:bg-muted"
           >
-            <Mic className="size-6" strokeWidth={2.2} aria-hidden="true" />
+            <Mic className="size-[18px]" strokeWidth={2.2} aria-hidden="true" />
           </button>
 
           <button
@@ -151,12 +153,12 @@ export default function ChatComposer({ sendMessageAction, input, setInputAction 
             aria-label={hasText ? 'Send message' : 'Start voice chat'}
             disabled={hasText ? false : undefined}
             onClick={hasText ? handleSubmit : undefined}
-            className="flex size-12 items-center justify-center rounded-full bg-black text-white transition-colors hover:bg-black/90 disabled:opacity-100 dark:bg-white dark:text-black dark:hover:bg-white/90"
+            className="flex size-9 items-center justify-center rounded-full bg-black text-white transition-colors hover:bg-black/90 disabled:opacity-100 dark:bg-white dark:text-black dark:hover:bg-white/90"
           >
             {hasText ? (
-              <ArrowUp className="size-7" strokeWidth={2.6} aria-hidden="true" />
+              <ArrowUp className="size-[18px]" strokeWidth={2.6} aria-hidden="true" />
             ) : (
-              <AudioLines className="size-6" strokeWidth={2.4} aria-hidden="true" />
+              <AudioLines className="size-4" strokeWidth={2.4} aria-hidden="true" />
             )}
           </button>
         </div>
