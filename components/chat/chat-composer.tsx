@@ -134,7 +134,7 @@ export default function ChatComposer({
           placeholder="Ask anything"
           wrap={isMultiline ? 'soft' : 'off'}
           className={cn(
-            'chat-composer-textarea w-full resize-none border-0 bg-transparent px-0 text-base text-foreground outline-none placeholder:text-muted-foreground focus-visible:ring-0 md:text-base',
+            'chat-composer-textarea w-full resize-none border-0 bg-transparent pl-0 pt-3 mr-2 text-base text-foreground outline-none placeholder:text-muted-foreground focus-visible:ring-0 md:text-base',
             isMultiline
               ? 'max-h-[308px] min-h-7 leading-7'
               : 'h-8 min-h-8 overflow-hidden leading-8',
@@ -192,7 +192,11 @@ export default function ChatComposer({
             className="flex size-9 items-center justify-center rounded-full bg-black text-white transition-colors hover:bg-black/90 disabled:opacity-100 dark:bg-white dark:text-black dark:hover:bg-white/90"
           >
             {isLoading ? (
-              <LoaderCircle className="size-[18px] animate-spin" strokeWidth={2.4} aria-hidden="true" />
+              <LoaderCircle
+                className="size-[18px] animate-spin"
+                strokeWidth={2.4}
+                aria-hidden="true"
+              />
             ) : isGenerating ? (
               <Square className="size-3.5 fill-current" strokeWidth={2.4} aria-hidden="true" />
             ) : hasText ? (
