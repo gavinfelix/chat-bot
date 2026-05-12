@@ -77,7 +77,7 @@ export default function ChatComposer({ sendMessageAction, input, setInputAction 
   return (
     <div
       className={cn(
-        'pointer-events-auto mx-auto flex w-full max-w-3xl border border-border bg-card shadow-sm',
+        'pointer-events-auto mx-auto flex w-full max-w-3xl border border-border bg-card dark:border-transparent dark:bg-[#212121]',
         isMultiline
           ? 'relative rounded-[28px] px-3 pt-0 pb-2'
           : 'min-h-14 items-center gap-2 rounded-full px-2 py-1.5',
@@ -120,8 +120,8 @@ export default function ChatComposer({ sendMessageAction, input, setInputAction 
 
         {isMultiline ? (
           <>
-            <div className="pointer-events-none absolute top-0 right-0 left-0 h-0.5 bg-card/80 backdrop-blur-[1px]" />
-            <div className="pointer-events-none absolute right-0 left-0 h-0.5 bg-card/80 backdrop-blur-[1px]" />
+            <div className="pointer-events-none absolute top-0 right-0 left-0 h-0.5 bg-card/80 backdrop-blur-[1px] dark:bg-[#212121]/80" />
+            <div className="pointer-events-none absolute right-0 left-0 h-0.5 bg-card/80 backdrop-blur-[1px] dark:bg-[#212121]/80" />
           </>
         ) : null}
       </div>

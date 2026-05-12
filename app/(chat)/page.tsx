@@ -48,7 +48,7 @@ export default function Home() {
 
   return (
     <div className="relative flex h-full min-w-0 flex-1 flex-col bg-background text-foreground transition-colors">
-      <AppHeader className="h-14" title="Chat Bot" subtitle="New conversation" />
+      <AppHeader className="relative z-20 h-14" title="Chat Bot" subtitle="New conversation" />
 
       <div className="absolute inset-0 flex items-center justify-center px-6">
         <div className="flex w-full max-w-3xl -translate-y-15 flex-col items-center text-center">
