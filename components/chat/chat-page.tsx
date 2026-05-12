@@ -175,7 +175,7 @@ export default function ChatPage({ chatId }: Props) {
 
         <div className="absolute inset-x-0 bottom-8 px-6">
           <div className="pointer-events-auto mx-auto max-w-3xl">
-            <ChatComposer sendMessage={triggerSend} input={input} setInput={setInput} />
+            <ChatComposer sendMessageAction={triggerSend} input={input} setInputAction={setInput} />
           </div>
         </div>
 
