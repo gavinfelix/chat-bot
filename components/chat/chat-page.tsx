@@ -26,8 +26,11 @@ export default function ChatPage({ chatId }: Props) {
   const actionsMenuRef = useRef<HTMLDivElement | null>(null);
   const composerRef = useRef<HTMLDivElement | null>(null);
   const [composerHeight, setComposerHeight] = useState(56);
-  const composerOverlayHeight = composerHeight + 15;
+  const composerOverlayHeight = composerHeight + 10;
   const messagesBottomPadding = composerHeight + 100;
+  const composerBottomOffset = 32;
+  const disclaimerLineHeight = 16;
+  const disclaimerBottomOffset = composerBottomOffset / 2 - disclaimerLineHeight / 2;
 
   useEffect(() => {
     const handlePointerDown = (event: MouseEvent) => {
@@ -202,7 +205,7 @@ export default function ChatPage({ chatId }: Props) {
           style={{ height: composerOverlayHeight }}
         />
 
-        <div className="absolute inset-x-0 bottom-10 px-6">
+        <div className="absolute inset-x-0 px-6" style={{ bottom: composerBottomOffset }}>
           <div ref={composerRef} className="pointer-events-auto mx-auto max-w-3xl">
             <ChatComposer
               sendMessageAction={triggerSend}
@@ -214,7 +217,10 @@ export default function ChatPage({ chatId }: Props) {
           </div>
         </div>
 
-        <div className="absolute inset-x-0 bottom-5 z-10 flex justify-center px-6">
+        <div
+          className="absolute inset-x-0 z-10 flex justify-center px-6"
+          style={{ bottom: disclaimerBottomOffset }}
+        >
           <p className="text-center text-[11px] leading-4 text-muted-foreground">
             Chat Bot can make mistakes. Check important info.
           </p>
