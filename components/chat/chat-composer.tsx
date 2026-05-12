@@ -59,6 +59,12 @@ export default function ChatComposer({ sendMessageAction, input, setInputAction 
     setInputAction(value);
   };
 
+  const handlePaste = (clipboardText: string) => {
+    if (clipboardText.includes('\n') || clipboardText.length > 80) {
+      setIsExpanded(true);
+    }
+  };
+
   const handleKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
     if (event.key !== 'Enter' || event.shiftKey || event.altKey || event.nativeEvent.isComposing) {
       return;
@@ -71,7 +77,7 @@ export default function ChatComposer({ sendMessageAction, input, setInputAction 
   return (
     <div
       className={cn(
-        'pointer-events-auto mx-auto flex w-full max-w-3xl border border-border bg-card shadow-sm transition-[padding,border-radius]',
+        'pointer-events-auto mx-auto flex w-full max-w-3xl border border-border bg-card shadow-sm',
         isMultiline
           ? 'relative rounded-[28px] px-3 pt-0 pb-2'
           : 'min-h-14 items-center gap-2 rounded-full px-2 py-1.5',
@@ -80,7 +86,9 @@ export default function ChatComposer({ sendMessageAction, input, setInputAction 
       <div
         className={cn(
           'flex min-w-0 flex-1',
-          isMultiline ? 'relative w-full pt-0 pb-14 pl-3' : 'items-center gap-2',
+          isMultiline
+            ? 'relative w-full overflow-hidden rounded-t-[12px] pt-0 pb-10 pl-3'
+            : 'items-center gap-2',
         )}
       >
         {!isMultiline ? (
@@ -99,18 +107,21 @@ export default function ChatComposer({ sendMessageAction, input, setInputAction 
           value={input}
           onChange={(event) => handleInputChange(event.target.value)}
           onKeyDown={handleKeyDown}
+          onPaste={(event) => handlePaste(event.clipboardData.getData('text'))}
           placeholder="Ask anything"
           wrap={isMultiline ? 'soft' : 'off'}
           className={cn(
             'chat-composer-textarea w-full resize-none border-0 bg-transparent px-0 text-base text-foreground outline-none placeholder:text-muted-foreground focus-visible:ring-0 md:text-base',
-            isMultiline ? 'max-h-[308px] min-h-7 leading-7' : 'h-8 min-h-8 overflow-hidden leading-8',
+            isMultiline
+              ? 'max-h-[308px] min-h-7 leading-7'
+              : 'h-8 min-h-8 overflow-hidden leading-8',
           )}
         />
 
         {isMultiline ? (
           <>
             <div className="pointer-events-none absolute top-0 right-0 left-0 h-0.5 bg-card/80 backdrop-blur-[1px]" />
-            <div className="pointer-events-none absolute right-0 bottom-14 left-0 h-0.5 bg-card/80 backdrop-blur-[1px]" />
+            <div className="pointer-events-none absolute right-0 left-0 h-0.5 bg-card/80 backdrop-blur-[1px]" />
           </>
         ) : null}
       </div>
