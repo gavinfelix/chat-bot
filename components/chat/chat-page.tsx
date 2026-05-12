@@ -69,7 +69,7 @@ export default function ChatPage({ chatId }: Props) {
 
       if (reserveAssistantSpace) {
         setStreamReserveHeight(
-          Math.max(180, scrollContainer.clientHeight - messagesBottomPadding - 84),
+          Math.max(140, scrollContainer.clientHeight - messagesBottomPadding - 150),
         );
       } else {
         setStreamReserveHeight(0);
@@ -205,7 +205,7 @@ export default function ChatPage({ chatId }: Props) {
 
         sessionStorage.removeItem(pendingMessageKey);
         sendMessage({ text: pendingMessage }, { body: { chatId } });
-        scrollToMessagesBottomRef.current({ behavior: 'smooth' });
+        scrollToMessagesBottomRef.current({ reserveAssistantSpace: true, behavior: 'smooth' });
       } catch (error) {
         console.error('Load messages error:', error);
       }
@@ -233,7 +233,7 @@ export default function ChatPage({ chatId }: Props) {
     );
 
     setInput('');
-    scrollToMessagesBottom({ behavior: 'smooth' });
+    scrollToMessagesBottom({ reserveAssistantSpace: true, behavior: 'smooth' });
   };
 
   const deleteChat = async () => {
@@ -323,12 +323,15 @@ export default function ChatPage({ chatId }: Props) {
         {showScrollControl ? (
           <div
             className="absolute inset-x-0 z-30 flex justify-center px-6"
-            style={{ bottom: composerBottomOffset + composerHeight + 14 }}
+            style={{ bottom: composerBottomOffset + composerHeight + 50 }}
           >
             <button
               type="button"
               aria-label={isGenerating ? 'Scroll to latest response' : 'Scroll to bottom'}
-              className="pointer-events-auto flex size-14 items-center justify-center rounded-full border border-white/10 bg-[#242424]/95 text-white shadow-[0_0_0_4px_rgba(255,255,255,0.04),0_12px_30px_rgba(0,0,0,0.22)] transition-colors hover:bg-[#2c2c2c]"
+              className={cn(
+                'pointer-events-auto flex h-8 items-center justify-center border border-black/8 bg-white/35 text-foreground backdrop-blur-md transition-colors hover:bg-white/50 dark:border-white/10 dark:bg-[#242424]/28 dark:text-white dark:hover:bg-[#242424]/40',
+                isGenerating ? 'w-12 rounded-full' : 'w-10 h-10 rounded-full',
+              )}
               onClick={() =>
                 scrollToMessagesBottom({
                   reserveAssistantSpace: isGenerating,
@@ -337,13 +340,13 @@ export default function ChatPage({ chatId }: Props) {
               }
             >
               {isGenerating ? (
-                <span className="flex items-center gap-1.5" aria-hidden="true">
+                <span className="flex items-center gap-1" aria-hidden="true">
                   <span className="chat-scroll-dot" />
                   <span className="chat-scroll-dot" />
                   <span className="chat-scroll-dot" />
                 </span>
               ) : (
-                <ArrowDown className="size-8" strokeWidth={1.9} aria-hidden="true" />
+                <ArrowDown className="size-5" strokeWidth={2.1} aria-hidden="true" />
               )}
             </button>
           </div>
