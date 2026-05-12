@@ -134,10 +134,10 @@ export default function ChatComposer({
           placeholder="Ask anything"
           wrap={isMultiline ? 'soft' : 'off'}
           className={cn(
-            'chat-composer-textarea w-full resize-none border-0 bg-transparent pl-0 pt-3 mr-2 text-base text-foreground outline-none placeholder:text-muted-foreground focus-visible:ring-0 md:text-base',
+            'chat-composer-textarea mr-2 w-full resize-none border-0 bg-transparent pl-0 text-base text-foreground outline-none placeholder:text-muted-foreground focus-visible:ring-0 md:text-base',
             isMultiline
-              ? 'max-h-[308px] min-h-7 leading-7'
-              : 'h-8 min-h-8 overflow-hidden leading-8',
+              ? 'max-h-[308px] min-h-7 pt-3 leading-7'
+              : 'h-8 min-h-8 overflow-hidden pt-0 leading-8',
           )}
         />
 
