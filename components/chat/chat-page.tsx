@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Ellipsis, Trash2 } from 'lucide-react';
+import { ArrowDown, Ellipsis, Trash2 } from 'lucide-react';
 import ChatComposer from './chat-composer';
 import Messages from './messages';
 import { useChat } from '@ai-sdk/react';
@@ -24,13 +24,77 @@ export default function ChatPage({ chatId }: Props) {
   const [input, setInput] = useState('');
   const [isActionsOpen, setIsActionsOpen] = useState(false);
   const actionsMenuRef = useRef<HTMLDivElement | null>(null);
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const composerRef = useRef<HTMLDivElement | null>(null);
   const [composerHeight, setComposerHeight] = useState(56);
+  const [isAtBottom, setIsAtBottom] = useState(true);
+  const [streamReserveHeight, setStreamReserveHeight] = useState(0);
+  const isGenerating = status === 'submitted' || status === 'streaming';
   const composerOverlayHeight = composerHeight + 10;
   const messagesBottomPadding = composerHeight + 100;
   const composerBottomOffset = 32;
   const disclaimerLineHeight = 16;
   const disclaimerBottomOffset = composerBottomOffset / 2 - disclaimerLineHeight / 2;
+  const showScrollControl = isGenerating || !isAtBottom;
+
+  const isAtMessagesBottom = useCallback(() => {
+    const scrollContainer = scrollContainerRef.current;
+    const messagesEnd = messagesEndRef.current;
+
+    if (!scrollContainer || !messagesEnd) return true;
+
+    const containerRect = scrollContainer.getBoundingClientRect();
+    const messagesEndRect = messagesEnd.getBoundingClientRect();
+    const visibleBottom = containerRect.bottom - composerOverlayHeight;
+
+    return messagesEndRect.top <= visibleBottom + 8;
+  }, [composerOverlayHeight]);
+
+  const updateBottomState = useCallback(() => {
+    setIsAtBottom(isAtMessagesBottom());
+  }, [isAtMessagesBottom]);
+
+  const scrollToMessagesBottom = useCallback(
+    ({
+      reserveAssistantSpace = false,
+      behavior = 'smooth',
+    }: {
+      reserveAssistantSpace?: boolean;
+      behavior?: ScrollBehavior;
+    } = {}) => {
+      const scrollContainer = scrollContainerRef.current;
+
+      if (!scrollContainer) return;
+
+      if (reserveAssistantSpace) {
+        setStreamReserveHeight(
+          Math.max(140, scrollContainer.clientHeight - messagesBottomPadding - 150),
+        );
+      } else {
+        setStreamReserveHeight(0);
+      }
+
+      window.requestAnimationFrame(() => {
+        const latestScrollContainer = scrollContainerRef.current;
+
+        if (!latestScrollContainer) return;
+
+        latestScrollContainer.scrollTo({
+          top: latestScrollContainer.scrollHeight,
+          behavior,
+        });
+        window.requestAnimationFrame(updateBottomState);
+      });
+    },
+    [messagesBottomPadding, updateBottomState],
+  );
+
+  const scrollToMessagesBottomRef = useRef(scrollToMessagesBottom);
+
+  useLayoutEffect(() => {
+    scrollToMessagesBottomRef.current = scrollToMessagesBottom;
+  }, [scrollToMessagesBottom]);
 
   useEffect(() => {
     const handlePointerDown = (event: MouseEvent) => {
@@ -61,6 +125,48 @@ export default function ChatPage({ chatId }: Props) {
       observer.disconnect();
     };
   }, []);
+
+  useEffect(() => {
+    const scrollContainer = scrollContainerRef.current;
+
+    if (!scrollContainer) return;
+
+    let frame = 0;
+    const handleScroll = () => {
+      window.cancelAnimationFrame(frame);
+      frame = window.requestAnimationFrame(updateBottomState);
+    };
+
+    updateBottomState();
+    scrollContainer.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('resize', handleScroll);
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+      scrollContainer.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', handleScroll);
+    };
+  }, [updateBottomState]);
+
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(updateBottomState);
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+    };
+  }, [messages, composerHeight, streamReserveHeight, updateBottomState]);
+
+  useEffect(() => {
+    if (isGenerating) return;
+
+    const frame = window.requestAnimationFrame(() => {
+      setStreamReserveHeight(0);
+    });
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+    };
+  }, [isGenerating]);
 
   useEffect(() => {
     let cancelled = false;
@@ -99,6 +205,7 @@ export default function ChatPage({ chatId }: Props) {
 
         sessionStorage.removeItem(pendingMessageKey);
         sendMessage({ text: pendingMessage }, { body: { chatId } });
+        scrollToMessagesBottomRef.current({ reserveAssistantSpace: true, behavior: 'smooth' });
       } catch (error) {
         console.error('Load messages error:', error);
       }
@@ -126,6 +233,7 @@ export default function ChatPage({ chatId }: Props) {
     );
 
     setInput('');
+    scrollToMessagesBottom({ reserveAssistantSpace: true, behavior: 'smooth' });
   };
 
   const deleteChat = async () => {
@@ -149,7 +257,10 @@ export default function ChatPage({ chatId }: Props) {
   };
 
   return (
-    <div className="chat-page-scrollbar h-full min-w-0 flex-1 overflow-y-scroll bg-background text-foreground">
+    <div
+      ref={scrollContainerRef}
+      className="chat-page-scrollbar h-full min-w-0 flex-1 overflow-y-scroll bg-background text-foreground"
+    >
       <AppHeader
         pointerOverlay
         className="sticky top-0 z-20 h-12 bg-transparent"
@@ -192,6 +303,10 @@ export default function ChatPage({ chatId }: Props) {
         style={{ paddingBottom: messagesBottomPadding }}
       >
         <Messages messages={messages} />
+        <div ref={messagesEndRef} className="h-px w-full" aria-hidden="true" />
+        {streamReserveHeight > 0 ? (
+          <div style={{ height: streamReserveHeight }} aria-hidden="true" />
+        ) : null}
       </main>
 
       {/* Composer overlay */}
@@ -204,6 +319,38 @@ export default function ChatPage({ chatId }: Props) {
           className="absolute inset-x-0 bottom-0 bg-background"
           style={{ height: composerOverlayHeight }}
         />
+
+        {showScrollControl ? (
+          <div
+            className="absolute inset-x-0 z-30 flex justify-center px-6"
+            style={{ bottom: composerBottomOffset + composerHeight + 50 }}
+          >
+            <button
+              type="button"
+              aria-label={isGenerating ? 'Scroll to latest response' : 'Scroll to bottom'}
+              className={cn(
+                'pointer-events-auto flex h-8 items-center justify-center border border-black/8 bg-white/35 text-foreground backdrop-blur-md transition-colors hover:bg-white/50 dark:border-white/10 dark:bg-[#242424]/28 dark:text-white dark:hover:bg-[#242424]/40',
+                isGenerating ? 'w-12 rounded-full' : 'w-10 h-10 rounded-full',
+              )}
+              onClick={() =>
+                scrollToMessagesBottom({
+                  reserveAssistantSpace: isGenerating,
+                  behavior: 'smooth',
+                })
+              }
+            >
+              {isGenerating ? (
+                <span className="flex items-center gap-1" aria-hidden="true">
+                  <span className="chat-scroll-dot" />
+                  <span className="chat-scroll-dot" />
+                  <span className="chat-scroll-dot" />
+                </span>
+              ) : (
+                <ArrowDown className="size-5" strokeWidth={2.1} aria-hidden="true" />
+              )}
+            </button>
+          </div>
+        ) : null}
 
         <div className="absolute inset-x-0 px-6" style={{ bottom: composerBottomOffset }}>
           <div ref={composerRef} className="pointer-events-auto mx-auto max-w-3xl">
