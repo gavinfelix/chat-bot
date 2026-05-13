@@ -8,6 +8,13 @@
       "when": 1777285055026,
       "tag": "0000_powerful_rocket_raccoon",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1778666998393,
+      "tag": "0001_brown_black_bolt",
+      "breakpoints": true
     }
   ]
 }

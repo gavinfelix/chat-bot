@@ -1,9 +1,10 @@
 'use client';
 
 import { useChat } from '@ai-sdk/react';
+import { UIMessage } from 'ai';
 import { useRouter } from 'next/navigation';
 import { useEffect, useLayoutEffect, useRef } from 'react';
-import { DbMessage } from '@/lib/ai/types';
+import { ChatMessageMetadata, DbMessage } from '@/lib/ai/types';
 
 type ScrollToBottomAction = () => void;
 
@@ -14,7 +15,9 @@ type UseChatSessionParams = {
 
 export default function useChatSession({ chatId, onPendingMessageSent }: UseChatSessionParams) {
   const router = useRouter();
-  const { messages, setMessages, sendMessage, status, stop } = useChat({
+  const { messages, setMessages, sendMessage, status, stop } = useChat<
+    UIMessage<ChatMessageMetadata>
+  >({
     onFinish: () => {
       window.dispatchEvent(new Event('chats:refresh'));
     },
@@ -31,7 +34,7 @@ export default function useChatSession({ chatId, onPendingMessageSent }: UseChat
 
     async function loadMessages() {
       try {
-        const res = await fetch(`/api/messages/${chatId}`);
+        const res = await fetch(`/api/chats/${chatId}/messages`);
 
         if (!res.ok) {
           console.error('Load messages failed');
@@ -45,6 +48,9 @@ export default function useChatSession({ chatId, onPendingMessageSent }: UseChat
         const uiMessages = data.map((message: DbMessage) => ({
           id: message.id,
           role: message.role as 'user' | 'assistant' | 'system',
+          metadata: {
+            reaction: message.reaction,
+          } satisfies ChatMessageMetadata,
           parts: [
             {
               type: 'text' as const,

@@ -1,8 +1,9 @@
-import { createIdGenerator, streamText, UIMessage, convertToModelMessages } from 'ai';
+import { streamText, UIMessage, convertToModelMessages } from 'ai';
 import { db } from '@/db';
 import { messages as messagesTable, chats as chatsTable } from '@/db/schema';
 import { and, eq } from 'drizzle-orm';
 import { getCurrentUser } from '@/lib/auth/get-current-user';
+import { uuidSchema } from '@/lib/validations/common';
 
 export async function POST(req: Request) {
   try {
@@ -70,10 +71,7 @@ export async function POST(req: Request) {
     // message once generation has finished so we do not store partial output.
     return result.toUIMessageStreamResponse({
       originalMessages: messages,
-      generateMessageId: createIdGenerator({
-        prefix: 'msg',
-        size: 16,
-      }),
+      generateMessageId: () => crypto.randomUUID(),
       onFinish: async ({ messages }) => {
         try {
           const lastMessage = messages[messages.length - 1];
@@ -86,7 +84,10 @@ export async function POST(req: Request) {
             .map((part) => part.text)
             .join('');
 
+          const hasValidMessageId = uuidSchema.safeParse(lastMessage.id).success;
+
           await db.insert(messagesTable).values({
+            ...(hasValidMessageId ? { id: lastMessage.id } : {}),
             chatId,
             role: 'assistant',
             content,
