@@ -55,10 +55,12 @@ export default function ChatComposer({
   }, [input, isMultiline]);
 
   const handleSubmit = () => {
-    if (!hasText) return;
+    if (!hasText || isBusy) return;
 
+    const trimmedText = input.trim();
+    if (trimmedText === '') return;
     setIsExpanded(false);
-    sendMessageAction({ text: input });
+    sendMessageAction({ text: trimmedText });
   };
 
   const handlePrimaryAction = () => {
@@ -94,7 +96,7 @@ export default function ChatComposer({
     }
 
     event.preventDefault();
-    handleSubmit();
+    handlePrimaryAction();
   };
 
   return (
@@ -187,7 +189,7 @@ export default function ChatComposer({
             aria-label={
               isGenerating ? 'Stop generating' : hasText ? 'Send message' : 'Start voice chat'
             }
-            disabled={isLoading}
+            disabled={isLoading || (!isGenerating && !hasText)}
             onClick={isBusy || hasText ? handlePrimaryAction : undefined}
             className="flex size-9 items-center justify-center rounded-full bg-black text-white transition-colors hover:bg-black/90 disabled:opacity-100 dark:bg-white dark:text-black dark:hover:bg-white/90"
           >
