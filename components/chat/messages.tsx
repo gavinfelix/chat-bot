@@ -23,7 +23,7 @@ export default function Messages({ messages, status }: Props) {
   const isGenerating = status === 'submitted' || status === 'streaming';
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-5">
+    <div className="mx-auto flex w-full max-w-3xl flex-col gap-[0.35em]">
       {messages.map((message, index) => {
         if (message.role === 'user') {
           return <UserMessage message={message} key={message.id} />;

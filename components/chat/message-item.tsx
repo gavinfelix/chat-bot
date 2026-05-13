@@ -52,7 +52,7 @@ function IconActionButton({
       onClick={onClick}
       className={cn(
         'flex size-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:pointer-events-none disabled:opacity-50',
-        active && 'bg-muted text-foreground',
+        active && 'text-black hover:text-black dark:text-white dark:hover:text-white',
       )}
     >
       {children}
@@ -89,7 +89,13 @@ function MessageCopyButton({ text }: { text: string }) {
   );
 }
 
-function AssistantFeedbackButtons({ disabled, message }: { disabled?: boolean; message: ChatMessage }) {
+function AssistantFeedbackButtons({
+  disabled,
+  message,
+}: {
+  disabled?: boolean;
+  message: ChatMessage;
+}) {
   const [reaction, setReaction] = useState<ChatMessageMetadata['reaction']>(
     message.metadata?.reaction ?? null,
   );
@@ -120,25 +126,39 @@ function AssistantFeedbackButtons({ disabled, message }: { disabled?: boolean; m
       setIsSaving(false);
     }
   };
+  const showLikeButton = reaction === null || reaction === 'like';
+  const showDislikeButton = reaction === null || reaction === 'dislike';
 
   return (
     <>
-      <IconActionButton
-        active={reaction === 'like'}
-        disabled={disabled || isSaving}
-        label="Good response"
-        onClick={() => void updateReaction('like')}
-      >
-        <ThumbsUp className="size-4" strokeWidth={2} aria-hidden="true" />
-      </IconActionButton>
-      <IconActionButton
-        active={reaction === 'dislike'}
-        disabled={disabled || isSaving}
-        label="Bad response"
-        onClick={() => void updateReaction('dislike')}
-      >
-        <ThumbsDown className="size-4" strokeWidth={2} aria-hidden="true" />
-      </IconActionButton>
+      {showLikeButton ? (
+        <IconActionButton
+          active={reaction === 'like'}
+          disabled={disabled || isSaving}
+          label={reaction === 'like' ? 'Remove good response rating' : 'Good response'}
+          onClick={() => void updateReaction('like')}
+        >
+          <ThumbsUp
+            className={cn('size-4', reaction === 'like' && 'fill-current')}
+            strokeWidth={2}
+            aria-hidden="true"
+          />
+        </IconActionButton>
+      ) : null}
+      {showDislikeButton ? (
+        <IconActionButton
+          active={reaction === 'dislike'}
+          disabled={disabled || isSaving}
+          label={reaction === 'dislike' ? 'Remove bad response rating' : 'Bad response'}
+          onClick={() => void updateReaction('dislike')}
+        >
+          <ThumbsDown
+            className={cn('size-4', reaction === 'dislike' && 'fill-current')}
+            strokeWidth={2}
+            aria-hidden="true"
+          />
+        </IconActionButton>
+      ) : null}
     </>
   );
 }
@@ -147,11 +167,11 @@ export function UserMessage({ message }: { message: ChatMessage }) {
   const text = useMemo(() => getMessageText(message), [message]);
 
   return (
-    <div className="flex w-full flex-col items-end">
+    <div className="group/user-message flex w-full flex-col items-end">
       <div className="max-w-[80%] rounded-3xl bg-sidebar-accent px-4 py-2.5 text-sm leading-6 text-sidebar-accent-foreground dark:bg-[#2f2f2f] dark:text-white">
         <MessageTextParts message={message} />
       </div>
-      <div className="mt-1 flex items-center pr-1">
+      <div className="mt-1 flex items-center pr-1 opacity-0 transition-opacity group-hover/user-message:opacity-100 group-focus-within/user-message:opacity-100">
         <MessageCopyButton text={text} />
       </div>
     </div>
