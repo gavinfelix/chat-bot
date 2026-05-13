@@ -57,3 +57,6 @@ db/
 
 drizzle/
 ```
+
+Collection routes are nested under their parent resource.
+Single-resource actions are routed by the resource's own global id.

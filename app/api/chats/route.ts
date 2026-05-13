@@ -48,7 +48,6 @@ export async function GET() {
     }
 
     // Return the most recently updated chats first so the sidebar feels fresh.
-    // This ordering is coupled with updatedAt writes in /api/chat and PATCH.
     const chatsData = await db
       .select()
       .from(chats)

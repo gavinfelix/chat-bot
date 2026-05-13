@@ -52,7 +52,8 @@ function IconActionButton({
       onClick={onClick}
       className={cn(
         'flex size-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:pointer-events-none disabled:opacity-50',
-        active && 'text-black hover:text-black dark:text-white dark:hover:text-white',
+        active &&
+          'text-neutral-700 hover:text-neutral-700 dark:text-neutral-300 dark:hover:text-neutral-300',
       )}
     >
       {children}
