@@ -1,9 +1,9 @@
 'use client';
 
 import { useChat } from '@ai-sdk/react';
-import { UIMessage } from 'ai';
+import { UIMessage, DefaultChatTransport } from 'ai';
 import { useRouter } from 'next/navigation';
-import { useEffect, useLayoutEffect, useRef } from 'react';
+import { useEffect, useLayoutEffect, useRef, useMemo } from 'react';
 import { ChatMessageMetadata, DbMessage } from '@/lib/ai/types';
 
 type ScrollToBottomAction = () => void;
@@ -15,9 +15,20 @@ type UseChatSessionParams = {
 
 export default function useChatSession({ chatId, onPendingMessageSent }: UseChatSessionParams) {
   const router = useRouter();
+
+  const transport = useMemo(
+    () =>
+      new DefaultChatTransport({
+        api: `/api/chats/${chatId}/stream`,
+      }),
+    [chatId],
+  );
+
   const { messages, setMessages, sendMessage, status, stop } = useChat<
     UIMessage<ChatMessageMetadata>
   >({
+    id: chatId,
+    transport,
     onFinish: () => {
       window.dispatchEvent(new Event('chats:refresh'));
     },
@@ -69,7 +80,7 @@ export default function useChatSession({ chatId, onPendingMessageSent }: UseChat
         if (!pendingMessage) return;
 
         sessionStorage.removeItem(pendingMessageKey);
-        sendMessage({ text: pendingMessage }, { body: { chatId } });
+        sendMessage({ text: pendingMessage });
         onPendingMessageSentRef.current?.();
       } catch (error) {
         console.error('Load messages error:', error);
@@ -84,14 +95,7 @@ export default function useChatSession({ chatId, onPendingMessageSent }: UseChat
   }, [chatId, sendMessage, setMessages]);
 
   const sendTextMessage = (text: string) => {
-    sendMessage(
-      { text },
-      {
-        body: {
-          chatId,
-        },
-      },
-    );
+    sendMessage({ text });
   };
 
   const deleteChat = async () => {

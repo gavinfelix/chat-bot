@@ -5,7 +5,11 @@ import { and, eq } from 'drizzle-orm';
 import { getCurrentUser } from '@/lib/auth/get-current-user';
 import { uuidSchema } from '@/lib/validations/common';
 
-export async function POST(req: Request) {
+type Params = {
+  params: Promise<{ chatId: string }>;
+};
+
+export async function POST(req: Request, { params }: Params) {
   try {
     // All chat writes are user-scoped, so authenticate first.
     const user = await getCurrentUser();
@@ -13,7 +17,9 @@ export async function POST(req: Request) {
     if (!user) {
       return new Response('Unauthorized', { status: 401 });
     }
-    const { messages, chatId }: { messages: UIMessage[]; chatId: string } = await req.json();
+
+    const { chatId } = await params;
+    const { messages }: { messages: UIMessage[] } = await req.json();
 
     if (!chatId) {
       return new Response('chatId is required', { status: 400 });
@@ -98,7 +104,7 @@ export async function POST(req: Request) {
       },
     });
   } catch (error) {
-    console.error('POST /api/chat failed:', error);
+    console.error('POST /api/chats/[chatId]/stream failed:', error);
 
     return new Response('Failed to send message', { status: 500 });
   }
