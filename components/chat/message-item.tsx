@@ -6,6 +6,7 @@ import { UIMessage } from 'ai';
 import MarkdownContent from './markdown-content';
 import { cn } from '@/lib/utils';
 import { ChatMessageMetadata } from '@/lib/ai/types';
+import { getChatModel } from '@/lib/ai/models';
 
 type ChatMessage = UIMessage<ChatMessageMetadata>;
 type MessageReaction = NonNullable<ChatMessageMetadata['reaction']>;
@@ -190,6 +191,7 @@ export function AssistantMessage({
 }) {
   const text = useMemo(() => getMessageText(message), [message]);
   const messageStatus = message.metadata?.status;
+  const modelLabel = message.metadata?.model ? getChatModel(message.metadata.model).label : null;
   const isRecoverable = messageStatus === 'error' || messageStatus === 'aborted';
   const recoverLabel = messageStatus === 'aborted' ? 'Continue' : 'Retry';
 
@@ -214,6 +216,9 @@ export function AssistantMessage({
         <div className="mt-1 flex items-center gap-1">
           <MessageCopyButton text={text} />
           <AssistantFeedbackButtons disabled={feedbackDisabled} message={message} />
+          {modelLabel ? (
+            <span className="px-1 text-xs leading-none text-muted-foreground">{modelLabel}</span>
+          ) : null}
         </div>
       ) : null}
     </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useLayoutEffect, useRef, useState, type KeyboardEvent } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent } from 'react';
 import { ArrowUp, AudioLines, Check, ChevronDown, LoaderCircle, Mic, Plus, Square } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { chatModels, type ChatModelId } from '@/lib/ai/models';
@@ -29,6 +29,7 @@ export default function ChatComposer({
   setInputAction,
 }: Props) {
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const modelMenuRef = useRef<HTMLDivElement | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
   const [isModelMenuOpen, setIsModelMenuOpen] = useState(false);
   const hasText = input.trim().length > 0;
@@ -61,6 +62,30 @@ export default function ChatComposer({
     textarea.style.height = `${Math.min(textarea.scrollHeight, maxHeight)}px`;
     textarea.style.overflowY = textarea.scrollHeight > maxHeight ? 'auto' : 'hidden';
   }, [input, isMultiline]);
+
+  useEffect(() => {
+    if (!isModelMenuOpen) return;
+
+    const handlePointerDown = (event: MouseEvent) => {
+      if (!modelMenuRef.current?.contains(event.target as Node)) {
+        setIsModelMenuOpen(false);
+      }
+    };
+
+    const handleKeyDown = (event: globalThis.KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsModelMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handlePointerDown);
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isModelMenuOpen]);
 
   const handleSubmit = () => {
     if (!hasText || isBusy) return;
@@ -176,7 +201,7 @@ export default function ChatComposer({
         ) : null}
 
         <div className="flex items-center gap-2">
-          <div className="relative">
+          <div ref={modelMenuRef} className="relative">
             <button
               type="button"
               className="flex h-8 items-center gap-1 rounded-full px-1.5 text-sm leading-none text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
