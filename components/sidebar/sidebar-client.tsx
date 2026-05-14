@@ -32,6 +32,7 @@ export default function SidebarClient({ initialChats, user }: Props) {
   const [isRecentOpen, setIsRecentOpen] = useState(true);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isSidebarScrolled, setIsSidebarScrolled] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
   const supabase = createClient();
@@ -158,13 +159,15 @@ export default function SidebarClient({ initialChats, user }: Props) {
         <>
           <div
             className="sidebar-scrollbar min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto bg-background pb-4"
-            onScroll={() => {
+            onScroll={(event) => {
+              setIsSidebarScrolled(event.currentTarget.scrollTop > 0);
               setOpenMenuChatId(null);
             }}
           >
             <SidebarHeader
               collapsed={isCollapsed}
               isHomePage={isHomePage}
+              isScrolled={isSidebarScrolled}
               onMore={closeHeaderMenu}
               onNewChat={newChat}
               onToggleSidebar={toggleSidebar}

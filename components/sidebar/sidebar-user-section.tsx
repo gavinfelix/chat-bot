@@ -32,7 +32,7 @@ export default function SidebarUserSection({
     <div
       className={cn(
         'relative bg-background py-2',
-        collapsed ? 'px-2' : 'border-t border-border px-2',
+        collapsed ? 'px-2' : 'border-t border-border/50 px-2',
       )}
     >
       <DropdownMenu open={isOpen} onOpenChange={onOpenChange}>
@@ -63,7 +63,7 @@ export default function SidebarUserSection({
         <DropdownMenuContent
           align={collapsed ? 'start' : 'center'}
           side={collapsed ? 'right' : 'top'}
-          className="w-[230px] rounded-2xl p-3 shadow-xl dark:bg-[#343434] dark:text-white"
+          className="min-w-[230px] w-[var(--radix-dropdown-menu-trigger-width)] rounded-2xl p-2 shadow-xl dark:bg-[#343434] dark:text-white"
         >
           <UserMenu user={user} onLogout={onLogout} />
         </DropdownMenuContent>
