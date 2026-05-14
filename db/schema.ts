@@ -16,5 +16,6 @@ export const messages = pgTable('message', {
 
   role: text('role').notNull(),
   content: text('content').notNull(),
+  reaction: text('reaction'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });

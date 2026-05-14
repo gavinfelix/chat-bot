@@ -42,7 +42,7 @@ export async function GET(_req: Request, { params }: Props) {
 
     return NextResponse.json(data, { status: 200 });
   } catch (error) {
-    console.error('GET /api/messages failed:', error);
+    console.error('GET /api/chats/[chatId]/messages failed:', error);
 
     return NextResponse.json({ error: 'Failed to load messages' }, { status: 500 });
   }

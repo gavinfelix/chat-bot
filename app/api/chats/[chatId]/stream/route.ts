@@ -1,10 +1,15 @@
-import { createIdGenerator, streamText, UIMessage, convertToModelMessages } from 'ai';
+import { streamText, UIMessage, convertToModelMessages } from 'ai';
 import { db } from '@/db';
 import { messages as messagesTable, chats as chatsTable } from '@/db/schema';
 import { and, eq } from 'drizzle-orm';
 import { getCurrentUser } from '@/lib/auth/get-current-user';
+import { uuidSchema } from '@/lib/validations/common';
 
-export async function POST(req: Request) {
+type Params = {
+  params: Promise<{ chatId: string }>;
+};
+
+export async function POST(req: Request, { params }: Params) {
   try {
     // All chat writes are user-scoped, so authenticate first.
     const user = await getCurrentUser();
@@ -12,7 +17,9 @@ export async function POST(req: Request) {
     if (!user) {
       return new Response('Unauthorized', { status: 401 });
     }
-    const { messages, chatId }: { messages: UIMessage[]; chatId: string } = await req.json();
+
+    const { chatId } = await params;
+    const { messages }: { messages: UIMessage[] } = await req.json();
 
     if (!chatId) {
       return new Response('chatId is required', { status: 400 });
@@ -70,10 +77,7 @@ export async function POST(req: Request) {
     // message once generation has finished so we do not store partial output.
     return result.toUIMessageStreamResponse({
       originalMessages: messages,
-      generateMessageId: createIdGenerator({
-        prefix: 'msg',
-        size: 16,
-      }),
+      generateMessageId: () => crypto.randomUUID(),
       onFinish: async ({ messages }) => {
         try {
           const lastMessage = messages[messages.length - 1];
@@ -86,7 +90,10 @@ export async function POST(req: Request) {
             .map((part) => part.text)
             .join('');
 
+          const hasValidMessageId = uuidSchema.safeParse(lastMessage.id).success;
+
           await db.insert(messagesTable).values({
+            ...(hasValidMessageId ? { id: lastMessage.id } : {}),
             chatId,
             role: 'assistant',
             content,
@@ -97,7 +104,7 @@ export async function POST(req: Request) {
       },
     });
   } catch (error) {
-    console.error('POST /api/chat failed:', error);
+    console.error('POST /api/chats/[chatId]/stream failed:', error);
 
     return new Response('Failed to send message', { status: 500 });
   }
