@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { Check, Copy, ThumbsDown, ThumbsUp } from 'lucide-react';
+import { Check, Copy, RefreshCw, ThumbsDown, ThumbsUp } from 'lucide-react';
 import { UIMessage } from 'ai';
 import MarkdownContent from './markdown-content';
 import { cn } from '@/lib/utils';
@@ -182,15 +182,34 @@ export function UserMessage({ message }: { message: ChatMessage }) {
 export function AssistantMessage({
   feedbackDisabled,
   message,
+  regenerateMessageAction,
 }: {
   feedbackDisabled?: boolean;
   message: ChatMessage;
+  regenerateMessageAction: (messageId: string) => void;
 }) {
   const text = useMemo(() => getMessageText(message), [message]);
+  const messageStatus = message.metadata?.status;
+  const isRecoverable = messageStatus === 'error' || messageStatus === 'aborted';
+  const recoverLabel = messageStatus === 'aborted' ? 'Continue' : 'Retry';
 
   return (
     <div className="w-full text-foreground">
       <MessageTextParts markdown message={message} />
+      {isRecoverable ? (
+        <div className="mt-1 flex items-center gap-2 text-sm text-muted-foreground">
+          <span>{messageStatus === 'aborted' ? 'Generation stopped.' : 'Generation failed.'}</span>
+          <button
+            type="button"
+            disabled={feedbackDisabled}
+            className="inline-flex h-8 items-center gap-1.5 rounded-full px-2.5 text-foreground transition-colors hover:bg-muted disabled:pointer-events-none disabled:opacity-50"
+            onClick={() => regenerateMessageAction(message.id)}
+          >
+            <RefreshCw className="size-3.5" strokeWidth={2} aria-hidden="true" />
+            <span>{recoverLabel}</span>
+          </button>
+        </div>
+      ) : null}
       {text.trim() ? (
         <div className="mt-1 flex items-center gap-1">
           <MessageCopyButton text={text} />

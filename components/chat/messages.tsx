@@ -4,22 +4,30 @@ import { ChatMessageMetadata } from '@/lib/ai/types';
 
 type Props = {
   messages: UIMessage<ChatMessageMetadata>[];
+  regenerateMessageAction: (messageId: string) => void;
   status: 'submitted' | 'streaming' | 'ready' | 'error';
 };
 
 const shouldShowThinking = (messages: UIMessage<ChatMessageMetadata>[], status: Props['status']) => {
-  if (status !== 'submitted' && status !== 'streaming') return false;
-
   const lastMessage = messages[messages.length - 1];
 
   if (!lastMessage) return false;
+  if (
+    lastMessage.role === 'assistant' &&
+    lastMessage.metadata?.status === 'streaming' &&
+    !lastMessage.parts.some((part) => part.type === 'text' && part.text.trim().length > 0)
+  ) {
+    return true;
+  }
+
+  if (status !== 'submitted' && status !== 'streaming') return false;
   if (lastMessage.role === 'user') return true;
   if (lastMessage.role !== 'assistant') return false;
 
   return !lastMessage.parts.some((part) => part.type === 'text' && part.text.trim().length > 0);
 };
 
-export default function Messages({ messages, status }: Props) {
+export default function Messages({ messages, regenerateMessageAction, status }: Props) {
   const isGenerating = status === 'submitted' || status === 'streaming';
 
   return (
@@ -30,10 +38,20 @@ export default function Messages({ messages, status }: Props) {
         }
 
         if (message.role === 'assistant') {
+          const hasText = message.parts.some(
+            (part) => part.type === 'text' && part.text.trim().length > 0,
+          );
+          const persistedStatus = message.metadata?.status;
+
+          if (persistedStatus === 'streaming' && !hasText) {
+            return null;
+          }
+
           return (
             <AssistantMessage
               feedbackDisabled={isGenerating && index === messages.length - 1}
               message={message}
+              regenerateMessageAction={regenerateMessageAction}
               key={message.id}
             />
           );

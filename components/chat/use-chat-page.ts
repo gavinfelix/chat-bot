@@ -77,6 +77,7 @@ export default function useChatPage({ chatId }: Props) {
     messages: session.messages,
     status: session.status,
     stop: session.stop,
+    regenerateMessage: session.regenerateMessage,
     input: composer.input,
     setInput: composer.setInput,
     triggerSend: composer.triggerSend,

@@ -40,6 +40,7 @@ export async function POST(req: Request, { params }: Params) {
       return new Response('Invalid chat request', { status: 400 });
     }
 
+    const { messageId, trigger } = parsedBody.data;
     const messages = parsedBody.data.messages as UIMessage[];
 
     const userMessage = messages[messages.length - 1];
@@ -86,7 +87,12 @@ export async function POST(req: Request, { params }: Params) {
       })
       .where(and(eq(chatsTable.id, parsedChatId.data), eq(chatsTable.userId, user.id)));
 
-    const assistantMessageId = crypto.randomUUID();
+    const modelMessages = await buildModelMessages(messages);
+    const parsedRegenerateMessageId =
+      trigger === 'regenerate-message' && messageId ? uuidSchema.safeParse(messageId) : null;
+    const assistantMessageId = parsedRegenerateMessageId?.success
+      ? parsedRegenerateMessageId.data
+      : crypto.randomUUID();
     let usage: LanguageModelUsage | null = null;
     let streamError: string | null = null;
 
@@ -95,26 +101,42 @@ export async function POST(req: Request, { params }: Params) {
       MODEL,
     );
 
-    const result = streamText({
-      model: MODEL,
-      messages: await buildModelMessages(messages),
-      onFinish: (event) => {
-        usage = event.totalUsage;
-      },
-      onError: async ({ error }) => {
-        streamError = getErrorMessage(error);
-        await saveAssistantMessage(
-          {
-            id: assistantMessageId,
-            chatId: parsedChatId.data,
-            content: '',
-            parts: createTextParts(''),
-            error: streamError,
-          },
-          MODEL,
-        );
-      },
-    });
+    let result;
+    try {
+      result = streamText({
+        model: MODEL,
+        messages: modelMessages,
+        onFinish: (event) => {
+          usage = event.totalUsage;
+        },
+        onError: async ({ error }) => {
+          streamError = getErrorMessage(error);
+          await saveAssistantMessage(
+            {
+              id: assistantMessageId,
+              chatId: parsedChatId.data,
+              content: '',
+              parts: createTextParts(''),
+              error: streamError,
+            },
+            MODEL,
+          );
+        },
+      });
+    } catch (error) {
+      streamError = getErrorMessage(error);
+      await saveAssistantMessage(
+        {
+          id: assistantMessageId,
+          chatId: parsedChatId.data,
+          content: '',
+          parts: createTextParts(''),
+          error: streamError,
+        },
+        MODEL,
+      );
+      throw error;
+    }
 
     // Stream the assistant response back to the client, then persist the final assistant
     // message once generation has finished so we do not store partial output.

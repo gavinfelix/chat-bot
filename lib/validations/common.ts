@@ -18,5 +18,7 @@ export const uiMessageSchema = z.object({
 });
 
 export const chatStreamRequestSchema = z.object({
+  messageId: z.string().optional(),
   messages: z.array(uiMessageSchema).min(1),
+  trigger: z.enum(['submit-message', 'regenerate-message']).optional(),
 });

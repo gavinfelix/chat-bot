@@ -60,6 +60,10 @@ export const createStreamingAssistantMessage = async (
     parts: createTextParts(''),
     model,
     status: 'streaming',
+    finishReason: null,
+    usage: null,
+    error: null,
+    reaction: null,
   } as const;
 
   await db
@@ -86,6 +90,7 @@ export const saveAssistantMessage = async (
     finishReason: finishReason ?? null,
     usage: usage ?? null,
     error: error ?? null,
+    reaction: null,
   } as const;
 
   await db

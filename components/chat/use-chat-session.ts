@@ -27,7 +27,7 @@ export default function useChatSession({
     [chatId],
   );
 
-  const { messages, setMessages, sendMessage, status, stop } = useChat<
+  const { messages, setMessages, sendMessage, regenerate, status, stop } = useChat<
     UIMessage<ChatMessageMetadata>
   >({
     id: chatId,
@@ -110,6 +110,10 @@ export default function useChatSession({
     sendMessage({ text });
   };
 
+  const regenerateMessage = (messageId: string) => {
+    void regenerate({ messageId });
+  };
+
   const deleteChat = async () => {
     const confirmed = window.confirm('Delete this chat?');
 
@@ -136,6 +140,7 @@ export default function useChatSession({
     status,
     stop,
     sendTextMessage,
+    regenerateMessage,
     deleteChat,
   };
 }
