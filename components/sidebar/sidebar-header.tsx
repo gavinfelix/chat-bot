@@ -1,9 +1,11 @@
 import { Brain, Ellipsis, PanelLeft, SquarePen } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import SidebarNavButton from './sidebar-nav-button';
 
 type Props = {
   collapsed: boolean;
   isHomePage: boolean;
+  isScrolled?: boolean;
   onMore: () => void;
   onNewChat: () => void;
   onToggleSidebar: () => void;
@@ -16,13 +18,14 @@ function AppMark({ className }: { className?: string }) {
 export default function SidebarHeader({
   collapsed,
   isHomePage,
+  isScrolled = false,
   onMore,
   onNewChat,
   onToggleSidebar,
 }: Props) {
   if (collapsed) {
     return (
-      <div className="flex min-h-0 flex-1 flex-col gap-3 bg-background px-2 pt-2">
+      <div className="flex min-h-0 flex-1 flex-col bg-background px-2 pt-2">
         <button
           type="button"
           aria-label="Expand sidebar"
@@ -32,28 +35,35 @@ export default function SidebarHeader({
           <AppMark className="h-5 w-5 shrink-0" />
         </button>
 
-        <SidebarNavButton
-          active={isHomePage}
-          collapsed
-          icon={SquarePen}
-          label="New chat"
-          className="h-10 w-10"
-          onClick={onNewChat}
-        />
+        <div className="mt-3 space-y-0.5">
+          <SidebarNavButton
+            active={isHomePage}
+            collapsed
+            icon={SquarePen}
+            label="New chat"
+            className="h-10 w-10"
+            onClick={onNewChat}
+          />
 
-        <SidebarNavButton
-          collapsed
-          icon={Ellipsis}
-          label="More"
-          className="h-9 w-10"
-          onClick={onMore}
-        />
+          <SidebarNavButton
+            collapsed
+            icon={Ellipsis}
+            label="More"
+            className="h-10 w-10"
+            onClick={onMore}
+          />
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="sticky top-0 z-20 space-y-3 bg-background px-2 pt-2 pb-4">
+    <div
+      className={cn(
+        'sticky top-0 z-20 border-b bg-background px-2 pt-2 pb-2 transition-colors',
+        isScrolled ? 'border-border/45' : 'border-transparent',
+      )}
+    >
       <div className="flex h-10 items-center justify-between gap-2">
         <button
           className="flex min-w-0 flex-1 items-center rounded-xl px-2 text-left text-base font-semibold text-foreground"
@@ -71,15 +81,17 @@ export default function SidebarHeader({
         </button>
       </div>
 
-      <SidebarNavButton
-        active={isHomePage}
-        icon={SquarePen}
-        label="New chat"
-        className="h-10"
-        onClick={onNewChat}
-      />
+      <div className="mt-3 space-y-0.5">
+        <SidebarNavButton
+          active={isHomePage}
+          icon={SquarePen}
+          label="New chat"
+          className="h-10"
+          onClick={onNewChat}
+        />
 
-      <SidebarNavButton icon={Ellipsis} label="More" className="h-9" onClick={onMore} />
+        <SidebarNavButton icon={Ellipsis} label="More" className="h-10" onClick={onMore} />
+      </div>
     </div>
   );
 }

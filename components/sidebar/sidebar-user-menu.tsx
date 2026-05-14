@@ -1,4 +1,3 @@
-import { forwardRef } from 'react';
 import {
   ChevronRight,
   CircleUserRound,
@@ -8,7 +7,6 @@ import {
   SlidersHorizontal,
   Sparkles,
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
 import UserAvatar from './sidebar-user-avatar';
 
 type SidebarUser = {
@@ -18,23 +16,13 @@ type SidebarUser = {
 };
 
 type Props = {
-  className?: string;
   onLogout: () => void;
   user: SidebarUser;
 };
 
-const UserMenu = forwardRef<HTMLDivElement, Props>(function UserMenu(
-  { className, onLogout, user },
-  ref,
-) {
+export default function UserMenu({ onLogout, user }: Props) {
   return (
-    <div
-      ref={ref}
-      className={cn(
-        'z-50 rounded-2xl border border-border bg-popover p-3 text-popover-foreground shadow-xl dark:border-white/10 dark:bg-[#343434] dark:text-white',
-        className,
-      )}
-    >
+    <>
       <div className="flex h-14 items-center gap-3 rounded-xl px-2">
         <UserAvatar initials={user.initials} />
         <div className="min-w-0 flex-1 text-left">
@@ -97,8 +85,6 @@ const UserMenu = forwardRef<HTMLDivElement, Props>(function UserMenu(
           <span className="min-w-0 flex-1 truncate">Log out</span>
         </button>
       </div>
-    </div>
+    </>
   );
-});
-
-export default UserMenu;
+}

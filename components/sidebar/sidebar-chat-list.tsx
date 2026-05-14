@@ -2,13 +2,9 @@ import type { RefObject } from 'react';
 import Link from 'next/link';
 import { ChevronDown, Ellipsis } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { DropdownMenu, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import ChatActionsMenu from './sidebar-chat-actions-menu';
-
-type Position = {
-  left: number;
-  top: number;
-};
 
 type Chat = {
   id: string;
@@ -16,8 +12,6 @@ type Chat = {
 };
 
 type Props = {
-  chatMenuPosition: Position | null;
-  chatMenuRef: RefObject<HTMLDivElement | null>;
   chats: Chat[];
   currentChatId: string | null;
   editingChatId: string | null;
@@ -27,7 +21,7 @@ type Props = {
   onCancelEditing: () => void;
   onDeleteChat: (chatId: string) => void;
   onEditingTitleChange: (title: string) => void;
-  onOpenChatMenu: (chat: Chat, button: HTMLElement) => void;
+  onChatMenuOpenChange: (chat: Chat, open: boolean) => void;
   onSaveEditing: (chatId: string) => void;
   onStartEditing: (chat: Chat) => void;
   onToggleOpen: () => void;
@@ -35,8 +29,6 @@ type Props = {
 };
 
 export default function RecentChats({
-  chatMenuPosition,
-  chatMenuRef,
   chats,
   currentChatId,
   editingChatId,
@@ -46,7 +38,7 @@ export default function RecentChats({
   onCancelEditing,
   onDeleteChat,
   onEditingTitleChange,
-  onOpenChatMenu,
+  onChatMenuOpenChange,
   onSaveEditing,
   onStartEditing,
   onToggleOpen,
@@ -58,7 +50,7 @@ export default function RecentChats({
         type="button"
         aria-expanded={isOpen}
         aria-controls="recent-chat-list"
-        className="mx-2 mb-2 flex h-8 items-center gap-1 px-2 text-sm font-semibold tracking-wide text-foreground"
+        className="mx-2 mb-1 flex h-8 items-center gap-1 px-2 text-sm font-semibold tracking-wide text-foreground"
         onClick={onToggleOpen}
       >
         <span>Recents</span>
@@ -69,9 +61,9 @@ export default function RecentChats({
       </button>
 
       {isOpen ? (
-        <div id="recent-chat-list" className="px-2">
+        <div id="recent-chat-list" className="space-y-0.5 px-2">
           {chats.map((chat) => (
-            <div className="group relative mb-1" key={chat.id}>
+            <div className="group relative" key={chat.id}>
               {editingChatId === chat.id ? (
                 <Input
                   ref={editInputRef}
@@ -102,41 +94,51 @@ export default function RecentChats({
                   <Link
                     href={`/chat/${chat.id}`}
                     className={cn(
-                      'block rounded-lg px-2 py-2 pr-10 text-sm transition-colors',
+                      'block rounded-lg px-2 py-2 text-sm transition-colors',
+                      openMenuChatId === chat.id ? 'pr-10' : 'pr-7 group-hover:pr-10',
                       chat.id === currentChatId
                         ? 'bg-muted text-foreground dark:bg-[#2f2f2f] dark:text-white'
-                        : 'text-foreground hover:bg-muted group-hover:bg-muted',
+                        : openMenuChatId === chat.id
+                          ? 'bg-muted/35 text-foreground hover:bg-muted group-hover:bg-muted dark:bg-white/[0.035] dark:hover:bg-white/10 dark:group-hover:bg-white/10'
+                          : 'text-foreground hover:bg-muted group-hover:bg-muted',
                     )}
+                    onDoubleClick={(event) => {
+                      event.preventDefault();
+                      onStartEditing(chat);
+                    }}
                   >
                     <span className="block truncate">{chat.title}</span>
                   </Link>
-                  <button
-                    type="button"
-                    aria-label="Chat actions"
-                    className={cn(
-                      'absolute top-1/2 right-2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-md text-foreground/70 transition',
-                      openMenuChatId === chat.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100',
-                    )}
-                    onClick={(event) => {
-                      event.preventDefault();
-                      event.stopPropagation();
-                      onOpenChatMenu(chat, event.currentTarget);
-                    }}
+                  <DropdownMenu
+                    open={openMenuChatId === chat.id}
+                    onOpenChange={(open) => onChatMenuOpenChange(chat, open)}
                   >
-                    <Ellipsis className="h-4 w-4" aria-hidden="true" />
-                  </button>
+                    <DropdownMenuTrigger asChild>
+                      <button
+                        type="button"
+                        aria-label="Chat actions"
+                        className={cn(
+                          'absolute top-0 right-2 flex h-full w-7 items-center justify-center rounded-md text-foreground/70 transition',
+                          openMenuChatId === chat.id
+                            ? 'opacity-100'
+                            : 'opacity-0 group-hover:opacity-100',
+                        )}
+                        onClick={(event) => {
+                          event.preventDefault();
+                          event.stopPropagation();
+                        }}
+                      >
+                        <Ellipsis className="h-4 w-4" aria-hidden="true" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <ChatActionsMenu
+                      chat={chat}
+                      onRename={onStartEditing}
+                      onDelete={onDeleteChat}
+                    />
+                  </DropdownMenu>
                 </>
               )}
-
-              {openMenuChatId === chat.id && editingChatId !== chat.id && chatMenuPosition ? (
-                <ChatActionsMenu
-                  ref={chatMenuRef}
-                  chat={chat}
-                  position={chatMenuPosition}
-                  onRename={onStartEditing}
-                  onDelete={onDeleteChat}
-                />
-              ) : null}
             </div>
           ))}
         </div>

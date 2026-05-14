@@ -1,8 +1,15 @@
 'use client';
 
 import { useLayoutEffect, useRef, useState, type KeyboardEvent } from 'react';
-import { ArrowUp, AudioLines, ChevronDown, LoaderCircle, Mic, Plus, Square } from 'lucide-react';
+import { ArrowUp, AudioLines, Check, ChevronDown, LoaderCircle, Mic, Plus, Square } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { chatModels, type ChatModelId } from '@/lib/ai/models';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 type Props = {
   isLoading?: boolean;
@@ -10,6 +17,8 @@ type Props = {
   status?: 'submitted' | 'streaming' | 'ready' | 'error';
   stopGeneratingAction?: () => void;
   input: string;
+  selectedModel: ChatModelId;
+  setSelectedModelAction: (model: ChatModelId) => void;
   setInputAction: (val: string) => void;
 };
 
@@ -21,6 +30,8 @@ export default function ChatComposer({
   status = 'ready',
   stopGeneratingAction,
   input,
+  selectedModel,
+  setSelectedModelAction,
   setInputAction,
 }: Props) {
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
@@ -29,6 +40,8 @@ export default function ChatComposer({
   const isMultiline = hasText && isExpanded;
   const isGenerating = status === 'submitted' || status === 'streaming';
   const isBusy = isLoading || isGenerating;
+  const selectedModelLabel =
+    chatModels.find((model) => model.id === selectedModel)?.label ?? selectedModel;
 
   useLayoutEffect(() => {
     const textarea = textareaRef.current;
@@ -168,13 +181,31 @@ export default function ChatComposer({
         ) : null}
 
         <div className="flex items-center gap-2">
-          <button
-            type="button"
-            className="flex h-8 items-center gap-1 rounded-full px-1.5 text-sm leading-none text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-          >
-            <span>Thinking</span>
-            <ChevronDown className="size-3.5" aria-hidden="true" />
-          </button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                className="flex h-8 items-center gap-1 rounded-full px-1.5 text-sm leading-none text-muted-foreground transition-colors hover:bg-muted hover:text-foreground data-[state=open]:bg-muted data-[state=open]:text-foreground"
+              >
+                <span>{selectedModelLabel}</span>
+                <ChevronDown className="size-3.5" aria-hidden="true" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" side="top" className="min-w-52">
+              {chatModels.map((model) => (
+                <DropdownMenuItem
+                  key={model.id}
+                  className="justify-between gap-3"
+                  onSelect={() => setSelectedModelAction(model.id)}
+                >
+                  <span>{model.label}</span>
+                  {selectedModel === model.id ? (
+                    <Check className="size-4" aria-hidden="true" />
+                  ) : null}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
 
           <button
             type="button"

@@ -6,6 +6,7 @@ import { getCurrentUser } from '@/lib/auth/get-current-user';
 import { chatStreamRequestSchema, uuidSchema } from '@/lib/validations/common';
 import { getMessageText, createTextParts, getErrorMessage } from '@/lib/ai/message-utils';
 import { buildModelMessages } from '@/lib/ai/context';
+import { getChatModel } from '@/lib/ai/models';
 import {
   saveAssistantMessage,
   saveUserMessage,
@@ -15,8 +16,6 @@ import {
 type Params = {
   params: Promise<{ chatId: string }>;
 };
-
-const MODEL = 'anthropic/claude-sonnet-4.5';
 
 export async function POST(req: Request, { params }: Params) {
   try {
@@ -40,7 +39,8 @@ export async function POST(req: Request, { params }: Params) {
       return new Response('Invalid chat request', { status: 400 });
     }
 
-    const { messageId, trigger } = parsedBody.data;
+    const { messageId, model, trigger } = parsedBody.data;
+    const selectedModel = getChatModel(model);
     const messages = parsedBody.data.messages as UIMessage[];
 
     const userMessage = messages[messages.length - 1];
@@ -98,13 +98,13 @@ export async function POST(req: Request, { params }: Params) {
 
     await createStreamingAssistantMessage(
       { id: assistantMessageId, chatId: parsedChatId.data },
-      MODEL,
+      selectedModel.id,
     );
 
     let result;
     try {
       result = streamText({
-        model: MODEL,
+        model: selectedModel.id,
         messages: modelMessages,
         onFinish: (event) => {
           usage = event.totalUsage;
@@ -119,7 +119,7 @@ export async function POST(req: Request, { params }: Params) {
               parts: createTextParts(''),
               error: streamError,
             },
-            MODEL,
+            selectedModel.id,
           );
         },
       });
@@ -133,7 +133,7 @@ export async function POST(req: Request, { params }: Params) {
           parts: createTextParts(''),
           error: streamError,
         },
-        MODEL,
+        selectedModel.id,
       );
       throw error;
     }
@@ -164,7 +164,7 @@ export async function POST(req: Request, { params }: Params) {
               usage,
               error: streamError,
             },
-            MODEL,
+            selectedModel.id,
           );
         } catch (error) {
           console.error('Save assistant message failed:', error);

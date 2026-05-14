@@ -12,9 +12,6 @@ type Props = {
 
 export default function ChatPage({ chatId }: Props) {
   const {
-    actionsMenuRef,
-    isActionsOpen,
-    setIsActionsOpen,
     scrollContainerRef,
     messagesEndRef,
     composerRef,
@@ -23,6 +20,8 @@ export default function ChatPage({ chatId }: Props) {
     stop,
     regenerateMessage,
     input,
+    selectedModel,
+    setSelectedModel,
     setInput,
     triggerSend,
     deleteChat,
@@ -43,12 +42,7 @@ export default function ChatPage({ chatId }: Props) {
       className="chat-page-scrollbar h-full min-w-0 flex-1 overflow-y-scroll bg-background text-foreground"
     >
       {/* Page header */}
-      <ChatAppHeader
-        actionsMenuRef={actionsMenuRef}
-        isActionsOpen={isActionsOpen}
-        setIsActionsOpenAction={setIsActionsOpen}
-        deleteChatAction={() => void deleteChat()}
-      />
+      <ChatAppHeader deleteChatAction={() => void deleteChat()} />
 
       {/* Main content */}
       <main
@@ -92,6 +86,8 @@ export default function ChatPage({ chatId }: Props) {
               status={status}
               stopGeneratingAction={stop}
               input={input}
+              selectedModel={selectedModel}
+              setSelectedModelAction={setSelectedModel}
               setInputAction={setInput}
             />
           </div>

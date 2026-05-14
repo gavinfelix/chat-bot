@@ -1,4 +1,3 @@
-import { forwardRef } from 'react';
 import {
   Archive,
   ChevronRight,
@@ -9,11 +8,7 @@ import {
   Trash2,
   UserPlus,
 } from 'lucide-react';
-
-type Position = {
-  left: number;
-  top: number;
-};
+import { DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 
 type Chat = {
   id: string;
@@ -24,79 +19,53 @@ type Props = {
   chat: Chat;
   onDelete: (chatId: string) => void;
   onRename: (chat: Chat) => void;
-  position: Position;
 };
 
-const ChatActionsMenu = forwardRef<HTMLDivElement, Props>(function ChatActionsMenu(
-  { chat, onDelete, onRename, position },
-  ref,
-) {
+export default function ChatActionsMenu({ chat, onDelete, onRename }: Props) {
   return (
-    <div
-      ref={ref}
-      className="fixed z-50 w-[230px] rounded-3xl border border-border bg-popover p-3 text-popover-foreground shadow-2xl dark:border-white/10 dark:bg-[#343434] dark:text-white"
-      style={{
-        top: position.top,
-        left: position.left,
-      }}
+    <DropdownMenuContent
+      align="start"
+      alignOffset={-12}
+      side="bottom"
+      sideOffset={2}
+      className="w-[214px] rounded-2xl p-2 shadow-2xl dark:bg-[#343434] dark:text-white"
     >
-      <button
-        type="button"
-        className="flex h-11 w-full items-center gap-3 rounded-xl px-3 text-left text-sm hover:bg-muted dark:hover:bg-white/10"
-      >
-        <Share className="h-5 w-5" aria-hidden="true" />
+      <DropdownMenuItem className="h-9 gap-2.5 rounded-xl px-2.5">
+        <Share className="h-4.5 w-4.5" aria-hidden="true" />
         <span className="min-w-0 flex-1 truncate">Share</span>
-      </button>
-      <button
-        type="button"
-        className="flex h-11 w-full items-center gap-3 rounded-xl px-3 text-left text-sm hover:bg-muted dark:hover:bg-white/10"
-      >
-        <UserPlus className="h-5 w-5" aria-hidden="true" />
+      </DropdownMenuItem>
+      <DropdownMenuItem className="h-9 gap-2.5 rounded-xl px-2.5">
+        <UserPlus className="h-4.5 w-4.5" aria-hidden="true" />
         <span className="min-w-0 flex-1 truncate">Start a group chat</span>
-      </button>
-      <button
-        type="button"
-        className="flex h-11 w-full items-center gap-3 rounded-xl px-3 text-left text-sm hover:bg-muted dark:hover:bg-white/10"
-        onClick={() => onRename(chat)}
-      >
-        <Pencil className="h-5 w-5" aria-hidden="true" />
+      </DropdownMenuItem>
+      <DropdownMenuItem className="h-9 gap-2.5 rounded-xl px-2.5" onSelect={() => onRename(chat)}>
+        <Pencil className="h-4.5 w-4.5" aria-hidden="true" />
         <span className="min-w-0 flex-1 truncate">Rename</span>
-      </button>
-      <button
-        type="button"
-        className="flex h-11 w-full items-center gap-3 rounded-xl px-3 text-left text-sm hover:bg-muted dark:hover:bg-white/10"
-      >
-        <Folder className="h-5 w-5" aria-hidden="true" />
+      </DropdownMenuItem>
+      <DropdownMenuItem className="h-9 gap-2.5 rounded-xl px-2.5">
+        <Folder className="h-4.5 w-4.5" aria-hidden="true" />
         <span className="min-w-0 flex-1 truncate">Move to project</span>
         <ChevronRight className="h-4 w-4" aria-hidden="true" />
-      </button>
+      </DropdownMenuItem>
 
-      <div className="my-2 h-px bg-border dark:bg-white/15" />
+      <DropdownMenuSeparator className="my-1.5" />
 
-      <button
-        type="button"
-        className="flex h-11 w-full items-center gap-3 rounded-xl px-3 text-left text-sm hover:bg-muted dark:hover:bg-white/10"
-      >
-        <Pin className="h-5 w-5" aria-hidden="true" />
+      <DropdownMenuItem className="h-9 gap-2.5 rounded-xl px-2.5">
+        <Pin className="h-4.5 w-4.5" aria-hidden="true" />
         <span className="min-w-0 flex-1 truncate">Pin chat</span>
-      </button>
-      <button
-        type="button"
-        className="flex h-11 w-full items-center gap-3 rounded-xl px-3 text-left text-sm hover:bg-muted dark:hover:bg-white/10"
-      >
-        <Archive className="h-5 w-5" aria-hidden="true" />
+      </DropdownMenuItem>
+      <DropdownMenuItem className="h-9 gap-2.5 rounded-xl px-2.5">
+        <Archive className="h-4.5 w-4.5" aria-hidden="true" />
         <span className="min-w-0 flex-1 truncate">Archive</span>
-      </button>
-      <button
-        type="button"
-        className="flex h-11 w-full items-center gap-3 rounded-xl px-3 text-left text-sm text-red-400 hover:bg-muted dark:hover:bg-white/10"
-        onClick={() => onDelete(chat.id)}
+      </DropdownMenuItem>
+      <DropdownMenuItem
+        variant="destructive"
+        className="h-9 gap-2.5 rounded-xl px-2.5 text-red-400"
+        onSelect={() => onDelete(chat.id)}
       >
-        <Trash2 className="h-5 w-5" aria-hidden="true" />
+        <Trash2 className="h-4.5 w-4.5" aria-hidden="true" />
         <span className="min-w-0 flex-1 truncate">Delete</span>
-      </button>
-    </div>
+      </DropdownMenuItem>
+    </DropdownMenuContent>
   );
-});
-
-export default ChatActionsMenu;
+}

@@ -1,32 +1,36 @@
 'use client';
 
 import { useState } from 'react';
+import { defaultChatModel, type ChatModelId } from '@/lib/ai/models';
 
 type ScrollToBottom = (options?: { reserveAssistantSpace?: boolean; behavior?: ScrollBehavior }) => void;
 
 type UseChatComposerParams = {
-  sendTextMessage: (text: string) => void;
-  scrollToMessagesBottom: ScrollToBottom;
+  sendTextMessageAction: (text: string, model: ChatModelId) => void;
+  scrollToMessagesBottomAction: ScrollToBottom;
 };
 
 export default function useChatComposer({
-  sendTextMessage,
-  scrollToMessagesBottom,
+  sendTextMessageAction,
+  scrollToMessagesBottomAction,
 }: UseChatComposerParams) {
   const [input, setInput] = useState('');
+  const [selectedModel, setSelectedModel] = useState<ChatModelId>(defaultChatModel.id);
 
   const triggerSend = () => {
     const text = input.trim();
 
     if (text === '') return;
 
-    sendTextMessage(text);
+    sendTextMessageAction(text, selectedModel);
     setInput('');
-    scrollToMessagesBottom({ reserveAssistantSpace: true, behavior: 'smooth' });
+    scrollToMessagesBottomAction({ reserveAssistantSpace: true, behavior: 'smooth' });
   };
 
   return {
     input,
+    selectedModel,
+    setSelectedModel,
     setInput,
     triggerSend,
   };
