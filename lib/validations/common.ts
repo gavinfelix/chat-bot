@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { chatModelIds } from '@/lib/ai/models';
 
 export const uuidSchema = z.uuid();
 
@@ -20,5 +21,6 @@ export const uiMessageSchema = z.object({
 export const chatStreamRequestSchema = z.object({
   messageId: z.string().optional(),
   messages: z.array(uiMessageSchema).min(1),
+  model: z.enum(chatModelIds).optional(),
   trigger: z.enum(['submit-message', 'regenerate-message']).optional(),
 });

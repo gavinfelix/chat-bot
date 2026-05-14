@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import useAutoScroll from './use-auto-scroll';
 import useChatComposer from './use-chat-composer';
 import useChatSession from './use-chat-session';
@@ -24,6 +24,8 @@ export default function useChatPage({ chatId }: Props) {
     },
   });
 
+  const { regenerateMessage: runRegenerateRequest } = session;
+
   const isGenerating = session.status === 'submitted' || session.status === 'streaming';
 
   const autoScroll = useAutoScroll({
@@ -36,9 +38,16 @@ export default function useChatPage({ chatId }: Props) {
   const { scrollToMessagesBottom } = autoScroll;
 
   const composer = useChatComposer({
-    sendTextMessage: session.sendTextMessage,
-    scrollToMessagesBottom,
+    sendTextMessageAction: session.sendTextMessage,
+    scrollToMessagesBottomAction: scrollToMessagesBottom,
   });
+
+  const regenerateMessage = useCallback(
+    (messageId: string) => {
+      runRegenerateRequest(messageId, composer.selectedModel);
+    },
+    [runRegenerateRequest, composer.selectedModel],
+  );
 
   useEffect(() => {
     scrollPendingMessageRef.current = () => {
@@ -77,8 +86,10 @@ export default function useChatPage({ chatId }: Props) {
     messages: session.messages,
     status: session.status,
     stop: session.stop,
-    regenerateMessage: session.regenerateMessage,
+    regenerateMessage,
     input: composer.input,
+    selectedModel: composer.selectedModel,
+    setSelectedModel: composer.setSelectedModel,
     setInput: composer.setInput,
     triggerSend: composer.triggerSend,
     deleteChat,

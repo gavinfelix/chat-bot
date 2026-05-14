@@ -23,6 +23,8 @@ export default function ChatPage({ chatId }: Props) {
     stop,
     regenerateMessage,
     input,
+    selectedModel,
+    setSelectedModel,
     setInput,
     triggerSend,
     deleteChat,
@@ -92,6 +94,8 @@ export default function ChatPage({ chatId }: Props) {
               status={status}
               stopGeneratingAction={stop}
               input={input}
+              selectedModel={selectedModel}
+              setSelectedModelAction={setSelectedModel}
               setInputAction={setInput}
             />
           </div>

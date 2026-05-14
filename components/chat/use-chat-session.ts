@@ -3,8 +3,9 @@
 import { useChat } from '@ai-sdk/react';
 import { UIMessage, DefaultChatTransport } from 'ai';
 import { useRouter } from 'next/navigation';
-import { useEffect, useLayoutEffect, useRef, useMemo } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useMemo } from 'react';
 import { ChatMessageMetadata, DbMessage } from '@/lib/ai/types';
+import { defaultChatModel, isChatModelId, type ChatModelId } from '@/lib/ai/models';
 
 type ScrollToBottomAction = () => void;
 
@@ -87,12 +88,22 @@ export default function useChatSession({
         if (cancelled) return;
 
         const pendingMessageKey = `chat:${chatId}:pending-message`;
+        const pendingModelKey = `chat:${chatId}:pending-model`;
         const pendingMessage = sessionStorage.getItem(pendingMessageKey);
+        const pendingModel = sessionStorage.getItem(pendingModelKey);
 
         if (!pendingMessage) return;
 
         sessionStorage.removeItem(pendingMessageKey);
-        sendMessage({ text: pendingMessage });
+        sessionStorage.removeItem(pendingModelKey);
+        sendMessage(
+          { text: pendingMessage },
+          {
+            body: {
+              model: isChatModelId(pendingModel) ? pendingModel : defaultChatModel.id,
+            },
+          },
+        );
         afterPendingMessageSentActionRef.current?.();
       } catch (error) {
         console.error('Load messages error:', error);
@@ -106,13 +117,16 @@ export default function useChatSession({
     };
   }, [chatId, sendMessage, setMessages]);
 
-  const sendTextMessage = (text: string) => {
-    sendMessage({ text });
+  const sendTextMessage = (text: string, model: ChatModelId) => {
+    sendMessage({ text }, { body: { model } });
   };
 
-  const regenerateMessage = (messageId: string) => {
-    void regenerate({ messageId });
-  };
+  const regenerateMessage = useCallback(
+    (messageId: string, model: ChatModelId) => {
+      void regenerate({ messageId, body: { model } });
+    },
+    [regenerate],
+  );
 
   const deleteChat = async () => {
     const confirmed = window.confirm('Delete this chat?');

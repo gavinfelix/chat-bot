@@ -4,10 +4,12 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import AppHeader from '@/components/layout/app-header';
 import ChatComposer from '@/components/chat/chat-composer';
+import { defaultChatModel, type ChatModelId } from '@/lib/ai/models';
 
 export default function Home() {
   const [input, setInput] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
+  const [selectedModel, setSelectedModel] = useState<ChatModelId>(defaultChatModel.id);
   const router = useRouter();
 
   // After creating a new chat, store the first message before opening the chat page.
@@ -37,6 +39,7 @@ export default function Home() {
       const chat = await res.json();
 
       sessionStorage.setItem(`chat:${chat.id}:pending-message`, message);
+      sessionStorage.setItem(`chat:${chat.id}:pending-model`, selectedModel);
 
       router.push(`/chat/${chat.id}`);
     } catch (error) {
@@ -63,6 +66,8 @@ export default function Home() {
               isLoading={loading}
               sendMessageAction={createNewChat}
               input={input}
+              selectedModel={selectedModel}
+              setSelectedModelAction={setSelectedModel}
               setInputAction={setInput}
             />
           </div>

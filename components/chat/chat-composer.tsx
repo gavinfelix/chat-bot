@@ -1,8 +1,9 @@
 'use client';
 
 import { useLayoutEffect, useRef, useState, type KeyboardEvent } from 'react';
-import { ArrowUp, AudioLines, ChevronDown, LoaderCircle, Mic, Plus, Square } from 'lucide-react';
+import { ArrowUp, AudioLines, Check, ChevronDown, LoaderCircle, Mic, Plus, Square } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { chatModels, type ChatModelId } from '@/lib/ai/models';
 
 type Props = {
   isLoading?: boolean;
@@ -10,6 +11,8 @@ type Props = {
   status?: 'submitted' | 'streaming' | 'ready' | 'error';
   stopGeneratingAction?: () => void;
   input: string;
+  selectedModel: ChatModelId;
+  setSelectedModelAction: (model: ChatModelId) => void;
   setInputAction: (val: string) => void;
 };
 
@@ -21,14 +24,19 @@ export default function ChatComposer({
   status = 'ready',
   stopGeneratingAction,
   input,
+  selectedModel,
+  setSelectedModelAction,
   setInputAction,
 }: Props) {
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isModelMenuOpen, setIsModelMenuOpen] = useState(false);
   const hasText = input.trim().length > 0;
   const isMultiline = hasText && isExpanded;
   const isGenerating = status === 'submitted' || status === 'streaming';
   const isBusy = isLoading || isGenerating;
+  const selectedModelLabel =
+    chatModels.find((model) => model.id === selectedModel)?.label ?? selectedModel;
 
   useLayoutEffect(() => {
     const textarea = textareaRef.current;
@@ -168,13 +176,37 @@ export default function ChatComposer({
         ) : null}
 
         <div className="flex items-center gap-2">
-          <button
-            type="button"
-            className="flex h-8 items-center gap-1 rounded-full px-1.5 text-sm leading-none text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-          >
-            <span>Thinking</span>
-            <ChevronDown className="size-3.5" aria-hidden="true" />
-          </button>
+          <div className="relative">
+            <button
+              type="button"
+              className="flex h-8 items-center gap-1 rounded-full px-1.5 text-sm leading-none text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              onClick={() => setIsModelMenuOpen((open) => !open)}
+            >
+              <span>{selectedModelLabel}</span>
+              <ChevronDown className="size-3.5" aria-hidden="true" />
+            </button>
+
+            {isModelMenuOpen ? (
+              <div className="absolute right-0 bottom-10 z-30 min-w-52 overflow-hidden rounded-xl border border-border bg-popover p-1 shadow-lg">
+                {chatModels.map((model) => (
+                  <button
+                    type="button"
+                    key={model.id}
+                    className="flex w-full items-center justify-between gap-3 rounded-lg px-3 py-2 text-left text-sm text-popover-foreground hover:bg-muted"
+                    onClick={() => {
+                      setSelectedModelAction(model.id);
+                      setIsModelMenuOpen(false);
+                    }}
+                  >
+                    <span>{model.label}</span>
+                    {selectedModel === model.id ? (
+                      <Check className="size-4" aria-hidden="true" />
+                    ) : null}
+                  </button>
+                ))}
+              </div>
+            ) : null}
+          </div>
 
           <button
             type="button"
