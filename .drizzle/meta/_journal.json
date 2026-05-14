@@ -15,6 +15,13 @@
       "when": 1778666998393,
       "tag": "0001_brown_black_bolt",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1778723984399,
+      "tag": "0002_brainy_mojo",
+      "breakpoints": true
     }
   ]
 }

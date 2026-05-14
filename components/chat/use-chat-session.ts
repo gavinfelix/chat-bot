@@ -56,19 +56,28 @@ export default function useChatSession({ chatId, onPendingMessageSent }: UseChat
 
         if (cancelled) return;
 
-        const uiMessages = data.map((message: DbMessage) => ({
-          id: message.id,
-          role: message.role as 'user' | 'assistant' | 'system',
-          metadata: {
-            reaction: message.reaction,
-          } satisfies ChatMessageMetadata,
-          parts: [
+        const uiMessages = data.map((message: DbMessage) => {
+          const fallbackParts: UIMessage<ChatMessageMetadata>['parts'] = [
             {
               type: 'text' as const,
               text: message.content,
             },
-          ],
-        }));
+          ];
+
+          return {
+            id: message.id,
+            role: message.role as 'user' | 'assistant' | 'system',
+            metadata: {
+              error: message.error,
+              finishReason: message.finishReason,
+              model: message.model,
+              reaction: message.reaction,
+              status: message.status,
+              usage: message.usage,
+            } satisfies ChatMessageMetadata,
+            parts: message.parts ?? fallbackParts,
+          };
+        });
 
         setMessages(uiMessages);
 
