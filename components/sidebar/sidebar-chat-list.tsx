@@ -2,13 +2,9 @@ import type { RefObject } from 'react';
 import Link from 'next/link';
 import { ChevronDown, Ellipsis } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { DropdownMenu, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import ChatActionsMenu from './sidebar-chat-actions-menu';
-
-type Position = {
-  left: number;
-  top: number;
-};
 
 type Chat = {
   id: string;
@@ -16,8 +12,6 @@ type Chat = {
 };
 
 type Props = {
-  chatMenuPosition: Position | null;
-  chatMenuRef: RefObject<HTMLDivElement | null>;
   chats: Chat[];
   currentChatId: string | null;
   editingChatId: string | null;
@@ -27,7 +21,7 @@ type Props = {
   onCancelEditing: () => void;
   onDeleteChat: (chatId: string) => void;
   onEditingTitleChange: (title: string) => void;
-  onOpenChatMenu: (chat: Chat, button: HTMLElement) => void;
+  onChatMenuOpenChange: (chat: Chat, open: boolean) => void;
   onSaveEditing: (chatId: string) => void;
   onStartEditing: (chat: Chat) => void;
   onToggleOpen: () => void;
@@ -35,8 +29,6 @@ type Props = {
 };
 
 export default function RecentChats({
-  chatMenuPosition,
-  chatMenuRef,
   chats,
   currentChatId,
   editingChatId,
@@ -46,7 +38,7 @@ export default function RecentChats({
   onCancelEditing,
   onDeleteChat,
   onEditingTitleChange,
-  onOpenChatMenu,
+  onChatMenuOpenChange,
   onSaveEditing,
   onStartEditing,
   onToggleOpen,
@@ -110,33 +102,36 @@ export default function RecentChats({
                   >
                     <span className="block truncate">{chat.title}</span>
                   </Link>
-                  <button
-                    type="button"
-                    aria-label="Chat actions"
-                    className={cn(
-                      'absolute top-1/2 right-2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-md text-foreground/70 transition',
-                      openMenuChatId === chat.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100',
-                    )}
-                    onClick={(event) => {
-                      event.preventDefault();
-                      event.stopPropagation();
-                      onOpenChatMenu(chat, event.currentTarget);
-                    }}
+                  <DropdownMenu
+                    open={openMenuChatId === chat.id}
+                    onOpenChange={(open) => onChatMenuOpenChange(chat, open)}
                   >
-                    <Ellipsis className="h-4 w-4" aria-hidden="true" />
-                  </button>
+                    <DropdownMenuTrigger asChild>
+                      <button
+                        type="button"
+                        aria-label="Chat actions"
+                        className={cn(
+                          'absolute top-1/2 right-2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-md text-foreground/70 transition hover:bg-muted data-[state=open]:bg-muted',
+                          openMenuChatId === chat.id
+                            ? 'opacity-100'
+                            : 'opacity-0 group-hover:opacity-100',
+                        )}
+                        onClick={(event) => {
+                          event.preventDefault();
+                          event.stopPropagation();
+                        }}
+                      >
+                        <Ellipsis className="h-4 w-4" aria-hidden="true" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <ChatActionsMenu
+                      chat={chat}
+                      onRename={onStartEditing}
+                      onDelete={onDeleteChat}
+                    />
+                  </DropdownMenu>
                 </>
               )}
-
-              {openMenuChatId === chat.id && editingChatId !== chat.id && chatMenuPosition ? (
-                <ChatActionsMenu
-                  ref={chatMenuRef}
-                  chat={chat}
-                  position={chatMenuPosition}
-                  onRename={onStartEditing}
-                  onDelete={onDeleteChat}
-                />
-              ) : null}
             </div>
           ))}
         </div>
