@@ -21,6 +21,7 @@ export default function ChatPage({ chatId }: Props) {
     messages,
     status,
     stop,
+    regenerateMessage,
     input,
     setInput,
     triggerSend,
@@ -54,7 +55,7 @@ export default function ChatPage({ chatId }: Props) {
         className="min-h-[calc(100%-48px)] px-6 pt-2"
         style={{ paddingBottom: messagesBottomPadding }}
       >
-        <Messages messages={messages} status={status} />
+        <Messages messages={messages} status={status} regenerateMessageAction={regenerateMessage} />
         <div ref={messagesEndRef} className="h-px w-full" aria-hidden="true" />
         {streamReserveHeight > 0 ? (
           <div style={{ height: streamReserveHeight }} aria-hidden="true" />

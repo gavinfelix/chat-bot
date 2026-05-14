@@ -10,10 +10,13 @@ type ScrollToBottomAction = () => void;
 
 type UseChatSessionParams = {
   chatId: string;
-  onPendingMessageSent?: ScrollToBottomAction;
+  afterPendingMessageSentAction?: ScrollToBottomAction;
 };
 
-export default function useChatSession({ chatId, onPendingMessageSent }: UseChatSessionParams) {
+export default function useChatSession({
+  chatId,
+  afterPendingMessageSentAction,
+}: UseChatSessionParams) {
   const router = useRouter();
 
   const transport = useMemo(
@@ -24,7 +27,7 @@ export default function useChatSession({ chatId, onPendingMessageSent }: UseChat
     [chatId],
   );
 
-  const { messages, setMessages, sendMessage, status, stop } = useChat<
+  const { messages, setMessages, sendMessage, regenerate, status, stop } = useChat<
     UIMessage<ChatMessageMetadata>
   >({
     id: chatId,
@@ -34,11 +37,11 @@ export default function useChatSession({ chatId, onPendingMessageSent }: UseChat
     },
   });
 
-  const onPendingMessageSentRef = useRef(onPendingMessageSent);
+  const afterPendingMessageSentActionRef = useRef(afterPendingMessageSentAction);
 
   useLayoutEffect(() => {
-    onPendingMessageSentRef.current = onPendingMessageSent;
-  }, [onPendingMessageSent]);
+    afterPendingMessageSentActionRef.current = afterPendingMessageSentAction;
+  }, [afterPendingMessageSentAction]);
 
   useEffect(() => {
     let cancelled = false;
@@ -56,19 +59,28 @@ export default function useChatSession({ chatId, onPendingMessageSent }: UseChat
 
         if (cancelled) return;
 
-        const uiMessages = data.map((message: DbMessage) => ({
-          id: message.id,
-          role: message.role as 'user' | 'assistant' | 'system',
-          metadata: {
-            reaction: message.reaction,
-          } satisfies ChatMessageMetadata,
-          parts: [
+        const uiMessages = data.map((message: DbMessage) => {
+          const fallbackParts: UIMessage<ChatMessageMetadata>['parts'] = [
             {
               type: 'text' as const,
               text: message.content,
             },
-          ],
-        }));
+          ];
+
+          return {
+            id: message.id,
+            role: message.role as 'user' | 'assistant' | 'system',
+            metadata: {
+              error: message.error,
+              finishReason: message.finishReason,
+              model: message.model,
+              reaction: message.reaction,
+              status: message.status,
+              usage: message.usage,
+            } satisfies ChatMessageMetadata,
+            parts: message.parts ?? fallbackParts,
+          };
+        });
 
         setMessages(uiMessages);
 
@@ -81,7 +93,7 @@ export default function useChatSession({ chatId, onPendingMessageSent }: UseChat
 
         sessionStorage.removeItem(pendingMessageKey);
         sendMessage({ text: pendingMessage });
-        onPendingMessageSentRef.current?.();
+        afterPendingMessageSentActionRef.current?.();
       } catch (error) {
         console.error('Load messages error:', error);
       }
@@ -96,6 +108,10 @@ export default function useChatSession({ chatId, onPendingMessageSent }: UseChat
 
   const sendTextMessage = (text: string) => {
     sendMessage({ text });
+  };
+
+  const regenerateMessage = (messageId: string) => {
+    void regenerate({ messageId });
   };
 
   const deleteChat = async () => {
@@ -124,6 +140,7 @@ export default function useChatSession({ chatId, onPendingMessageSent }: UseChat
     status,
     stop,
     sendTextMessage,
+    regenerateMessage,
     deleteChat,
   };
 }

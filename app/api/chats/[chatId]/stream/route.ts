@@ -1,13 +1,22 @@
-import { streamText, UIMessage, convertToModelMessages } from 'ai';
+import { streamText, UIMessage, type LanguageModelUsage } from 'ai';
 import { db } from '@/db';
-import { messages as messagesTable, chats as chatsTable } from '@/db/schema';
+import { chats as chatsTable } from '@/db/schema';
 import { and, eq } from 'drizzle-orm';
 import { getCurrentUser } from '@/lib/auth/get-current-user';
-import { uuidSchema } from '@/lib/validations/common';
+import { chatStreamRequestSchema, uuidSchema } from '@/lib/validations/common';
+import { getMessageText, createTextParts, getErrorMessage } from '@/lib/ai/message-utils';
+import { buildModelMessages } from '@/lib/ai/context';
+import {
+  saveAssistantMessage,
+  saveUserMessage,
+  createStreamingAssistantMessage,
+} from '@/lib/server/messages';
 
 type Params = {
   params: Promise<{ chatId: string }>;
 };
+
+const MODEL = 'anthropic/claude-sonnet-4.5';
 
 export async function POST(req: Request, { params }: Params) {
   try {
@@ -19,11 +28,20 @@ export async function POST(req: Request, { params }: Params) {
     }
 
     const { chatId } = await params;
-    const { messages }: { messages: UIMessage[] } = await req.json();
+    const parsedChatId = uuidSchema.safeParse(chatId);
 
-    if (!chatId) {
-      return new Response('chatId is required', { status: 400 });
+    if (!parsedChatId.success) {
+      return new Response('Invalid chat id', { status: 400 });
     }
+
+    const parsedBody = chatStreamRequestSchema.safeParse(await req.json());
+
+    if (!parsedBody.success) {
+      return new Response('Invalid chat request', { status: 400 });
+    }
+
+    const { messageId, trigger } = parsedBody.data;
+    const messages = parsedBody.data.messages as UIMessage[];
 
     const userMessage = messages[messages.length - 1];
     if (!userMessage || userMessage.role !== 'user') {
@@ -34,7 +52,7 @@ export async function POST(req: Request, { params }: Params) {
     const [chat] = await db
       .select({ id: chatsTable.id })
       .from(chatsTable)
-      .where(and(eq(chatsTable.id, chatId), eq(chatsTable.userId, user.id)))
+      .where(and(eq(chatsTable.id, parsedChatId.data), eq(chatsTable.userId, user.id)))
       .limit(1);
 
     if (!chat) {
@@ -50,9 +68,10 @@ export async function POST(req: Request, { params }: Params) {
     if (!userMessageContent.trim()) {
       return new Response('Message content is required', { status: 400 });
     }
-    await db.insert(messagesTable).values({
-      chatId,
-      role: 'user',
+
+    await saveUserMessage({
+      chatId: parsedChatId.data,
+      message: userMessage,
       content: userMessageContent,
     });
 
@@ -66,38 +85,87 @@ export async function POST(req: Request, { params }: Params) {
         updatedAt: new Date(),
         ...(isFirstMessage ? { title } : {}),
       })
-      .where(and(eq(chatsTable.id, chatId), eq(chatsTable.userId, user.id)));
+      .where(and(eq(chatsTable.id, parsedChatId.data), eq(chatsTable.userId, user.id)));
 
-    const result = streamText({
-      model: 'anthropic/claude-sonnet-4.5',
-      messages: await convertToModelMessages(messages),
-    });
+    const modelMessages = await buildModelMessages(messages);
+    const parsedRegenerateMessageId =
+      trigger === 'regenerate-message' && messageId ? uuidSchema.safeParse(messageId) : null;
+    const assistantMessageId = parsedRegenerateMessageId?.success
+      ? parsedRegenerateMessageId.data
+      : crypto.randomUUID();
+    let usage: LanguageModelUsage | null = null;
+    let streamError: string | null = null;
+
+    await createStreamingAssistantMessage(
+      { id: assistantMessageId, chatId: parsedChatId.data },
+      MODEL,
+    );
+
+    let result;
+    try {
+      result = streamText({
+        model: MODEL,
+        messages: modelMessages,
+        onFinish: (event) => {
+          usage = event.totalUsage;
+        },
+        onError: async ({ error }) => {
+          streamError = getErrorMessage(error);
+          await saveAssistantMessage(
+            {
+              id: assistantMessageId,
+              chatId: parsedChatId.data,
+              content: '',
+              parts: createTextParts(''),
+              error: streamError,
+            },
+            MODEL,
+          );
+        },
+      });
+    } catch (error) {
+      streamError = getErrorMessage(error);
+      await saveAssistantMessage(
+        {
+          id: assistantMessageId,
+          chatId: parsedChatId.data,
+          content: '',
+          parts: createTextParts(''),
+          error: streamError,
+        },
+        MODEL,
+      );
+      throw error;
+    }
 
     // Stream the assistant response back to the client, then persist the final assistant
     // message once generation has finished so we do not store partial output.
     return result.toUIMessageStreamResponse({
       originalMessages: messages,
-      generateMessageId: () => crypto.randomUUID(),
-      onFinish: async ({ messages }) => {
+      generateMessageId: () => assistantMessageId,
+      onError: (error) => {
+        streamError = getErrorMessage(error);
+        return streamError;
+      },
+      onFinish: async ({ responseMessage, finishReason, isAborted }) => {
         try {
-          const lastMessage = messages[messages.length - 1];
+          if (responseMessage.role !== 'assistant') return;
 
-          if (lastMessage?.role !== 'assistant') return;
+          const content = getMessageText(responseMessage);
 
-          // Flatten text parts because the current database schema stores plain text only.
-          const content = lastMessage.parts
-            .filter((part) => part.type === 'text')
-            .map((part) => part.text)
-            .join('');
-
-          const hasValidMessageId = uuidSchema.safeParse(lastMessage.id).success;
-
-          await db.insert(messagesTable).values({
-            ...(hasValidMessageId ? { id: lastMessage.id } : {}),
-            chatId,
-            role: 'assistant',
-            content,
-          });
+          await saveAssistantMessage(
+            {
+              id: assistantMessageId,
+              chatId: parsedChatId.data,
+              content,
+              parts: responseMessage.parts,
+              finishReason: finishReason ?? null,
+              isAborted,
+              usage,
+              error: streamError,
+            },
+            MODEL,
+          );
         } catch (error) {
           console.error('Save assistant message failed:', error);
         }

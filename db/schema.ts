@@ -1,4 +1,7 @@
-import { pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { jsonb, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import type { UIMessage } from 'ai';
+
+type MessageStatus = 'streaming' | 'completed' | 'aborted' | 'error';
 
 export const chats = pgTable('chat', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -16,6 +19,12 @@ export const messages = pgTable('message', {
 
   role: text('role').notNull(),
   content: text('content').notNull(),
+  parts: jsonb('parts').$type<UIMessage['parts']>(),
+  model: text('model'),
+  status: text('status').$type<MessageStatus>().default('completed').notNull(),
+  finishReason: text('finish_reason'),
+  usage: jsonb('usage'),
+  error: text('error'),
   reaction: text('reaction'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
