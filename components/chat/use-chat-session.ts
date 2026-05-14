@@ -10,10 +10,13 @@ type ScrollToBottomAction = () => void;
 
 type UseChatSessionParams = {
   chatId: string;
-  onPendingMessageSent?: ScrollToBottomAction;
+  afterPendingMessageSentAction?: ScrollToBottomAction;
 };
 
-export default function useChatSession({ chatId, onPendingMessageSent }: UseChatSessionParams) {
+export default function useChatSession({
+  chatId,
+  afterPendingMessageSentAction,
+}: UseChatSessionParams) {
   const router = useRouter();
 
   const transport = useMemo(
@@ -34,11 +37,11 @@ export default function useChatSession({ chatId, onPendingMessageSent }: UseChat
     },
   });
 
-  const onPendingMessageSentRef = useRef(onPendingMessageSent);
+  const afterPendingMessageSentActionRef = useRef(afterPendingMessageSentAction);
 
   useLayoutEffect(() => {
-    onPendingMessageSentRef.current = onPendingMessageSent;
-  }, [onPendingMessageSent]);
+    afterPendingMessageSentActionRef.current = afterPendingMessageSentAction;
+  }, [afterPendingMessageSentAction]);
 
   useEffect(() => {
     let cancelled = false;
@@ -90,7 +93,7 @@ export default function useChatSession({ chatId, onPendingMessageSent }: UseChat
 
         sessionStorage.removeItem(pendingMessageKey);
         sendMessage({ text: pendingMessage });
-        onPendingMessageSentRef.current?.();
+        afterPendingMessageSentActionRef.current?.();
       } catch (error) {
         console.error('Load messages error:', error);
       }

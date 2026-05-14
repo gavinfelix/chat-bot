@@ -19,7 +19,7 @@ export default function useChatPage({ chatId }: Props) {
 
   const session = useChatSession({
     chatId,
-    onPendingMessageSent: () => {
+    afterPendingMessageSentAction: () => {
       scrollPendingMessageRef.current();
     },
   });
