@@ -4,7 +4,7 @@ import { useChat } from '@ai-sdk/react';
 import { UIMessage, DefaultChatTransport } from 'ai';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useLayoutEffect, useRef, useMemo } from 'react';
-import { ChatMessageMetadata, DbMessage } from '@/lib/ai/types';
+import { ChatMessageMetadata, DbMessage, type MessageAttachment } from '@/lib/ai/types';
 import { defaultChatModel, isChatModelId, type ChatModelId } from '@/lib/ai/models';
 
 type ScrollToBottomAction = () => void;
@@ -78,6 +78,7 @@ export default function useChatSession({
               reaction: message.reaction,
               status: message.status,
               usage: message.usage,
+              attachments: message.attachments ?? [],
             } satisfies ChatMessageMetadata,
             parts: message.parts ?? fallbackParts,
           };
@@ -117,8 +118,15 @@ export default function useChatSession({
     };
   }, [chatId, sendMessage, setMessages]);
 
-  const sendTextMessage = (text: string, model: ChatModelId) => {
-    sendMessage({ text }, { body: { model } });
+  const sendTextMessage = (
+    text: string,
+    model: ChatModelId,
+    attachments: MessageAttachment[] = [],
+  ) => {
+    sendMessage(
+      { text, metadata: { attachments } satisfies ChatMessageMetadata },
+      { body: { model, attachmentIds: attachments.map((attachment) => attachment.id) } },
+    );
   };
 
   const regenerateMessage = useCallback(

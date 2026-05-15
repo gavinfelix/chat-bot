@@ -38,3 +38,39 @@ export const buildModelMessages = async (messages: UIMessage[]) => {
 
   return [...summaryMessages, ...recentModelMessages];
 };
+
+function escapeAttachmentName(name: string) {
+  return name
+    .replaceAll('&', '&amp;')
+    .replaceAll('"', '&quot;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;');
+}
+
+export function buildModelPrompt(input: {
+  text: string;
+  attachments: {
+    fileName: string;
+    contentText: string | null;
+  }[];
+}) {
+  const trimmedText = input.text.trim();
+
+  if (input.attachments.length === 0) {
+    return trimmedText;
+  }
+
+  const attachmentText = input.attachments
+    .map((attachment) => {
+      const content = attachment.contentText?.trimEnd() || '[No readable text content extracted.]';
+
+      return `<attached_file name="${escapeAttachmentName(attachment.fileName)}">\n${content}\n</attached_file>`;
+    })
+    .join('\n\n');
+
+  if (trimmedText) {
+    return `${trimmedText}\n\n${attachmentText}`;
+  }
+
+  return `Please use the attached file${input.attachments.length === 1 ? '' : 's'} as context.\n\n${attachmentText}`;
+}

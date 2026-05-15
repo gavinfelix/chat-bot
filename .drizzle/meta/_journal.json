@@ -22,6 +22,13 @@
       "when": 1778723984399,
       "tag": "0002_brainy_mojo",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1778836804689,
+      "tag": "0003_noisy_george_stacy",
+      "breakpoints": true
     }
   ]
 }

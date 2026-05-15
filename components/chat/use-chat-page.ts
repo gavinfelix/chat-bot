@@ -36,6 +36,7 @@ export default function useChatPage({ chatId }: Props) {
   const { scrollToMessagesBottom } = autoScroll;
 
   const composer = useChatComposer({
+    chatId,
     sendTextMessageAction: session.sendTextMessage,
     scrollToMessagesBottomAction: scrollToMessagesBottom,
   });
@@ -70,6 +71,7 @@ export default function useChatPage({ chatId }: Props) {
     setSelectedModel: composer.setSelectedModel,
     setInput: composer.setInput,
     triggerSend: composer.triggerSend,
+    uploadFile: composer.uploadFile,
     deleteChat,
     ...autoScroll,
   };

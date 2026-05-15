@@ -37,7 +37,7 @@ export const saveUserMessage = async ({ chatId, message, content }: SaveUserMess
     status: 'completed',
   } as const;
 
-  await db
+  const [savedMessage] = await db
     .insert(messages)
     .values({
       ...(message.id && uuidSchema.safeParse(message.id).success ? { id: message.id } : {}),
@@ -46,7 +46,10 @@ export const saveUserMessage = async ({ chatId, message, content }: SaveUserMess
     .onConflictDoUpdate({
       target: messages.id,
       set: values,
-    });
+    })
+    .returning({ id: messages.id });
+
+  return savedMessage.id;
 };
 
 export const createStreamingAssistantMessage = async (

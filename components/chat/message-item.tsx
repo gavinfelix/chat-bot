@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { Check, Copy, RefreshCw, ThumbsDown, ThumbsUp } from 'lucide-react';
+import { Check, Copy, FileText, RefreshCw, ThumbsDown, ThumbsUp } from 'lucide-react';
 import { UIMessage } from 'ai';
 import MarkdownContent from './markdown-content';
 import { cn } from '@/lib/utils';
@@ -30,6 +30,54 @@ function MessageTextParts({ message, markdown }: { message: ChatMessage; markdow
       </div>
     );
   });
+}
+
+function formatFileSize(size: number) {
+  if (size < 1024) return `${size} B`;
+  if (size < 1024 * 1024) return `${Math.round(size / 1024)} KB`;
+
+  return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function MessageAttachmentCards({ message }: { message: ChatMessage }) {
+  const attachments = message.metadata?.attachments ?? [];
+
+  if (attachments.length === 0) return null;
+
+  return (
+    <div className="mb-2 flex flex-wrap gap-2">
+      {attachments.map((attachment) => {
+        const content = (
+          <>
+            <FileText className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+            <span className="min-w-0 truncate">{attachment.fileName}</span>
+            <span className="shrink-0 text-xs text-muted-foreground">
+              {formatFileSize(attachment.size)}
+            </span>
+          </>
+        );
+
+        return attachment.url ? (
+          <a
+            key={attachment.id}
+            href={attachment.url}
+            target="_blank"
+            rel="noreferrer"
+            className="flex h-8 max-w-full items-center gap-2 rounded-md border border-border bg-background/65 px-2 text-sm text-foreground transition-colors hover:bg-background"
+          >
+            {content}
+          </a>
+        ) : (
+          <div
+            key={attachment.id}
+            className="flex h-8 max-w-full items-center gap-2 rounded-md border border-border bg-background/65 px-2 text-sm text-foreground"
+          >
+            {content}
+          </div>
+        );
+      })}
+    </div>
+  );
 }
 
 function IconActionButton({
@@ -171,7 +219,8 @@ export function UserMessage({ message }: { message: ChatMessage }) {
   return (
     <div className="group/user-message flex w-full flex-col items-end">
       <div className="max-w-[80%] rounded-3xl bg-sidebar-accent px-4 py-2.5 text-sm leading-6 text-sidebar-accent-foreground dark:bg-[#2f2f2f] dark:text-white">
-        <MessageTextParts message={message} />
+        <MessageAttachmentCards message={message} />
+        {text.trim() ? <MessageTextParts message={message} /> : null}
       </div>
       <div className="mt-1 flex items-center pr-1 opacity-0 transition-opacity group-hover/user-message:opacity-100 group-focus-within/user-message:opacity-100">
         <MessageCopyButton text={text} />
