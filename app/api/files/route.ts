@@ -3,11 +3,9 @@ import { and, eq } from 'drizzle-orm';
 import { db } from '@/db';
 import { chats, attachments } from '@/db/schema';
 import { getCurrentUser } from '@/lib/auth/get-current-user';
-import { createClient } from '@/lib/supabase/server';
 
 const MAX_FILE_SIZE = 1024 * 1024; // 1MB
 const MAX_TEXT_LENGTH = 80_000;
-const STORAGE_BUCKET = process.env.SUPABASE_ATTACHMENTS_BUCKET ?? 'chat-attachments';
 
 const allowedExtensions = ['.txt', '.md'];
 
@@ -24,10 +22,6 @@ function isAllowedTextFile(file: File) {
 function truncateText(text: string) {
   if (text.length <= MAX_TEXT_LENGTH) return text;
   return `${text.slice(0, MAX_TEXT_LENGTH)}\n\n[File content truncated because it is too long.]`;
-}
-
-function sanitizeFileName(fileName: string) {
-  return fileName.replace(/[^a-zA-Z0-9._-]/g, '_');
 }
 
 export async function POST(req: Request) {
@@ -77,22 +71,6 @@ export async function POST(req: Request) {
 
     const rawText = await file.text();
     const contentText = truncateText(rawText);
-    const supabase = await createClient();
-    const pathname = `${user.id}/${chatId}/${crypto.randomUUID()}-${sanitizeFileName(file.name)}`;
-    const { error: uploadError } = await supabase.storage
-      .from(STORAGE_BUCKET)
-      .upload(pathname, file, {
-        contentType: file.type || 'text/plain; charset=utf-8',
-        upsert: false,
-      });
-
-    if (uploadError) {
-      return NextResponse.json({ error: uploadError.message }, { status: 500 });
-    }
-
-    const {
-      data: { publicUrl },
-    } = supabase.storage.from(STORAGE_BUCKET).getPublicUrl(pathname);
 
     const [attachment] = await db
       .insert(attachments)
@@ -102,8 +80,6 @@ export async function POST(req: Request) {
         fileName: file.name,
         mimeType: file.type || 'text/plain',
         size: file.size,
-        url: publicUrl,
-        pathname,
         contentText,
         status: 'uploaded',
       })
