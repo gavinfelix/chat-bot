@@ -1,6 +1,13 @@
 'use client';
 
-import { useLayoutEffect, useRef, useState, type ChangeEvent, type KeyboardEvent } from 'react';
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type KeyboardEvent,
+} from 'react';
 import {
   ArrowUp,
   AudioLines,
@@ -25,13 +32,18 @@ import {
 
 type Props = {
   isLoading?: boolean;
-  sendMessageAction: (msg: { text: string; attachmentIds: string[]; attachments: MessageAttachment[] }) => void;
+  sendMessageAction: (msg: {
+    text: string;
+    attachmentIds: string[];
+    attachments: MessageAttachment[];
+  }) => void;
   status?: 'submitted' | 'streaming' | 'ready' | 'error';
   stopGeneratingAction?: () => void;
   input: string;
   selectedModel: ChatModelId;
   setSelectedModelAction: (model: ChatModelId) => void;
   setInputAction: (val: string) => void;
+  deleteFileAction?: (attachmentId: string) => Promise<void>;
   uploadFileAction?: (file: File) => Promise<MessageAttachment>;
 };
 
@@ -73,10 +85,13 @@ export default function ChatComposer({
   selectedModel,
   setSelectedModelAction,
   setInputAction,
+  deleteFileAction,
   uploadFileAction,
 }: Props) {
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const attachmentsRef = useRef<TextAttachment[]>([]);
+  const sentAttachmentIdsRef = useRef<Set<string>>(new Set());
   const [isExpanded, setIsExpanded] = useState(false);
   const [attachments, setAttachments] = useState<TextAttachment[]>([]);
   const [attachmentError, setAttachmentError] = useState<string | null>(null);
@@ -89,6 +104,22 @@ export default function ChatComposer({
   const isBusy = isLoading || isGenerating || isUploading;
   const selectedModelLabel =
     chatModels.find((model) => model.id === selectedModel)?.label ?? selectedModel;
+
+  useEffect(() => {
+    attachmentsRef.current = attachments;
+  }, [attachments]);
+
+  useEffect(() => {
+    return () => {
+      const unsentAttachments = attachmentsRef.current.filter(
+        (attachment) => !sentAttachmentIdsRef.current.has(attachment.id),
+      );
+
+      for (const attachment of unsentAttachments) {
+        void deleteFileAction?.(attachment.id);
+      }
+    };
+  }, [deleteFileAction]);
 
   useLayoutEffect(() => {
     const textarea = textareaRef.current;
@@ -118,6 +149,7 @@ export default function ChatComposer({
     if (!hasContent || isBusy) return;
 
     const messageText = input.trim();
+    sentAttachmentIdsRef.current = new Set(attachments.map((attachment) => attachment.id));
     setIsExpanded(false);
     setAttachments([]);
     setAttachmentError(null);
@@ -134,7 +166,7 @@ export default function ChatComposer({
       return;
     }
 
-    if (isLoading) return;
+    if (isLoading || isUploading) return;
 
     handleSubmit();
   };
@@ -214,6 +246,7 @@ export default function ChatComposer({
       currentAttachments.filter((attachment) => attachment.id !== attachmentId),
     );
     setAttachmentError(null);
+    void deleteFileAction?.(attachmentId);
   };
 
   const handleKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
@@ -392,7 +425,7 @@ export default function ChatComposer({
             aria-label={
               isGenerating ? 'Stop generating' : hasContent ? 'Send message' : 'Start voice chat'
             }
-            disabled={isLoading || (!isGenerating && !hasContent)}
+            disabled={isLoading || isUploading || (!isGenerating && !hasContent)}
             onClick={isBusy || hasContent ? handlePrimaryAction : undefined}
             className="flex size-9 items-center justify-center rounded-full bg-black text-white transition-colors hover:bg-black/90 disabled:opacity-100 dark:bg-white dark:text-black dark:hover:bg-white/90"
           >

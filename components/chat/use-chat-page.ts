@@ -71,6 +71,7 @@ export default function useChatPage({ chatId }: Props) {
     setSelectedModel: composer.setSelectedModel,
     setInput: composer.setInput,
     triggerSend: composer.triggerSend,
+    deleteFile: composer.deleteFile,
     uploadFile: composer.uploadFile,
     deleteChat,
     ...autoScroll,

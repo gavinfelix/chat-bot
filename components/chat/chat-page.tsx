@@ -24,6 +24,7 @@ export default function ChatPage({ chatId }: Props) {
     setSelectedModel,
     setInput,
     triggerSend,
+    deleteFile,
     uploadFile,
     deleteChat,
     composerHeight,
@@ -90,6 +91,7 @@ export default function ChatPage({ chatId }: Props) {
               selectedModel={selectedModel}
               setSelectedModelAction={setSelectedModel}
               setInputAction={setInput}
+              deleteFileAction={deleteFile}
               uploadFileAction={uploadFile}
             />
           </div>

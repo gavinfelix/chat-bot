@@ -40,6 +40,17 @@ async function uploadFile(chatId: string, file: File) {
   return data.attachment;
 }
 
+async function deleteFile(attachmentId: string) {
+  const res = await fetch(`/api/files/${attachmentId}`, {
+    method: 'DELETE',
+  });
+
+  if (!res.ok && res.status !== 404) {
+    const data = await res.json().catch(() => null);
+    throw new Error(data?.error || 'Delete attachment failed');
+  }
+}
+
 export default function useChatComposer({
   chatId,
   sendTextMessageAction,
@@ -72,6 +83,7 @@ export default function useChatComposer({
     setSelectedModel,
     setInput,
     triggerSend,
+    deleteFile,
     uploadFile: (file: File) => uploadFile(chatId, file),
   };
 }
