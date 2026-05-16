@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import AppHeader from '@/components/layout/app-header';
-import ChatComposer from '@/components/chat/chat-composer';
+import ChatComposer from '@/features/chat/composer/chat-composer';
 import { defaultChatModel, type ChatModelId } from '@/lib/ai/models';
 import type { MessageAttachment } from '@/lib/ai/types';
 

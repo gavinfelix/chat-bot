@@ -1,4 +1,4 @@
-import ChatPage from '@/components/chat/chat-page';
+import ChatPage from '@/features/chat/components/chat-page';
 
 type Props = {
   params: Promise<{
