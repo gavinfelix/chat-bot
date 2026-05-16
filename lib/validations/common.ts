@@ -19,6 +19,7 @@ export const uiMessageSchema = z.object({
 });
 
 export const chatStreamRequestSchema = z.object({
+  attachmentIds: z.array(uuidSchema).max(5).optional(),
   messageId: z.string().optional(),
   messages: z.array(uiMessageSchema).min(1),
   model: z.enum(chatModelIds).optional(),

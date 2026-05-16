@@ -4,7 +4,7 @@ import { useChat } from '@ai-sdk/react';
 import { UIMessage, DefaultChatTransport } from 'ai';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useLayoutEffect, useRef, useMemo } from 'react';
-import { ChatMessageMetadata, DbMessage } from '@/lib/ai/types';
+import { ChatMessageMetadata, DbMessage, type MessageAttachment } from '@/lib/ai/types';
 import { defaultChatModel, isChatModelId, type ChatModelId } from '@/lib/ai/models';
 
 type ScrollToBottomAction = () => void;
@@ -12,6 +12,44 @@ type ScrollToBottomAction = () => void;
 type UseChatSessionParams = {
   chatId: string;
   afterPendingMessageSentAction?: ScrollToBottomAction;
+};
+
+const parsePendingAttachments = (value: string | null): MessageAttachment[] => {
+  if (!value) return [];
+
+  try {
+    const parsedValue = JSON.parse(value);
+
+    if (!Array.isArray(parsedValue)) return [];
+
+    return parsedValue.filter(
+      (attachment): attachment is MessageAttachment =>
+        typeof attachment === 'object' &&
+        attachment !== null &&
+        typeof attachment.id === 'string' &&
+        typeof attachment.fileName === 'string' &&
+        typeof attachment.mimeType === 'string' &&
+        typeof attachment.size === 'number' &&
+        typeof attachment.status === 'string' &&
+        typeof attachment.createdAt === 'string',
+    );
+  } catch {
+    return [];
+  }
+};
+
+const parsePendingAttachmentIds = (value: string | null): string[] => {
+  if (!value) return [];
+
+  try {
+    const parsedValue = JSON.parse(value);
+
+    if (!Array.isArray(parsedValue)) return [];
+
+    return parsedValue.filter((attachmentId): attachmentId is string => typeof attachmentId === 'string');
+  } catch {
+    return [];
+  }
 };
 
 export default function useChatSession({
@@ -78,6 +116,7 @@ export default function useChatSession({
               reaction: message.reaction,
               status: message.status,
               usage: message.usage,
+              attachments: message.attachments ?? [],
             } satisfies ChatMessageMetadata,
             parts: message.parts ?? fallbackParts,
           };
@@ -89,17 +128,31 @@ export default function useChatSession({
 
         const pendingMessageKey = `chat:${chatId}:pending-message`;
         const pendingModelKey = `chat:${chatId}:pending-model`;
+        const pendingAttachmentIdsKey = `chat:${chatId}:pending-attachment-ids`;
+        const pendingAttachmentsKey = `chat:${chatId}:pending-attachments`;
         const pendingMessage = sessionStorage.getItem(pendingMessageKey);
         const pendingModel = sessionStorage.getItem(pendingModelKey);
+        const pendingAttachmentIds = parsePendingAttachmentIds(
+          sessionStorage.getItem(pendingAttachmentIdsKey),
+        );
+        const pendingAttachments = parsePendingAttachments(
+          sessionStorage.getItem(pendingAttachmentsKey),
+        );
 
-        if (!pendingMessage) return;
+        if (!pendingMessage && pendingAttachmentIds.length === 0) return;
 
         sessionStorage.removeItem(pendingMessageKey);
         sessionStorage.removeItem(pendingModelKey);
+        sessionStorage.removeItem(pendingAttachmentIdsKey);
+        sessionStorage.removeItem(pendingAttachmentsKey);
         sendMessage(
-          { text: pendingMessage },
+          {
+            text: pendingMessage ?? '',
+            metadata: { attachments: pendingAttachments } satisfies ChatMessageMetadata,
+          },
           {
             body: {
+              attachmentIds: pendingAttachmentIds,
               model: isChatModelId(pendingModel) ? pendingModel : defaultChatModel.id,
             },
           },
@@ -117,8 +170,15 @@ export default function useChatSession({
     };
   }, [chatId, sendMessage, setMessages]);
 
-  const sendTextMessage = (text: string, model: ChatModelId) => {
-    sendMessage({ text }, { body: { model } });
+  const sendTextMessage = (
+    text: string,
+    model: ChatModelId,
+    attachments: MessageAttachment[] = [],
+  ) => {
+    sendMessage(
+      { text, metadata: { attachments } satisfies ChatMessageMetadata },
+      { body: { model, attachmentIds: attachments.map((attachment) => attachment.id) } },
+    );
   };
 
   const regenerateMessage = useCallback(

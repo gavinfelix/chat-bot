@@ -1,10 +1,10 @@
 'use client';
 
-import ChatComposer from './chat-composer';
+import ChatComposer from '../composer/chat-composer';
 import ChatAutoScrollButton from './chat-auto-scroll-button';
 import ChatAppHeader from './chat-app-header';
 import Messages from './messages';
-import useChatPage from './use-chat-page';
+import useChatPage from '../hooks/use-chat-page';
 
 type Props = {
   chatId: string;
@@ -24,6 +24,8 @@ export default function ChatPage({ chatId }: Props) {
     setSelectedModel,
     setInput,
     triggerSend,
+    deleteFile,
+    uploadFile,
     deleteChat,
     composerHeight,
     composerOverlayHeight,
@@ -89,6 +91,8 @@ export default function ChatPage({ chatId }: Props) {
               selectedModel={selectedModel}
               setSelectedModelAction={setSelectedModel}
               setInputAction={setInput}
+              deleteFileAction={deleteFile}
+              uploadFileAction={uploadFile}
             />
           </div>
         </div>
