@@ -43,7 +43,11 @@ type Props = {
   isGenerating: boolean;
   isLoading: boolean;
   isMultiline: boolean;
+  isRecording: boolean;
+  isTranscribing: boolean;
   isUploading: boolean;
+  micDisabled: boolean;
+  micAction: () => void;
   openFilePickerAction: () => void;
   primaryAction: () => void;
   selectedModel: ChatModelId;
@@ -55,7 +59,11 @@ export default function ComposerToolbar({
   isGenerating,
   isLoading,
   isMultiline,
+  isRecording,
+  isTranscribing,
   isUploading,
+  micDisabled,
+  micAction,
   openFilePickerAction,
   primaryAction,
   selectedModel,
@@ -104,10 +112,22 @@ export default function ComposerToolbar({
 
         <button
           type="button"
-          aria-label="Voice input"
-          className="flex size-8 items-center justify-center rounded-full text-foreground transition-colors hover:bg-muted"
+          aria-label={isRecording ? 'Stop voice input' : 'Voice input'}
+          aria-pressed={isRecording}
+          disabled={micDisabled}
+          onClick={micAction}
+          className={cn(
+            'flex size-8 items-center justify-center rounded-full text-foreground transition-colors hover:bg-muted disabled:pointer-events-none disabled:opacity-50',
+            isRecording && 'bg-destructive/10 text-destructive hover:bg-destructive/15',
+          )}
         >
-          <Mic className="size-[18px]" strokeWidth={2.2} aria-hidden="true" />
+          {isTranscribing ? (
+            <LoaderCircle className="size-[18px] animate-spin" strokeWidth={2.4} aria-hidden="true" />
+          ) : isRecording ? (
+            <Square className="size-3.5 fill-current" strokeWidth={2.4} aria-hidden="true" />
+          ) : (
+            <Mic className="size-[18px]" strokeWidth={2.2} aria-hidden="true" />
+          )}
         </button>
 
         <button

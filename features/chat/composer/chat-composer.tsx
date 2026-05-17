@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState, type ChangeEvent } from 'react';
+import { useEffect, useRef, useState, type ChangeEvent } from 'react';
 import ComposerAttachments from './composer-attachments';
 import ComposerTextarea from './composer-textarea';
 import ComposerToolbar, { ComposerAttachButton } from './composer-toolbar';
@@ -41,7 +41,12 @@ export default function ChatComposer({
 }: Props) {
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const mediaStreamRef = useRef<MediaStream | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [voiceStatus, setVoiceStatus] = useState<'idle' | 'recording' | 'transcribing'>('idle');
+  const [voiceError, setVoiceError] = useState<string | null>(null);
   const {
     attachments,
     attachmentError,
@@ -59,9 +64,22 @@ export default function ChatComposer({
   const hasText = input.trim().length > 0;
   const hasAttachments = attachments.length > 0;
   const hasContent = hasText || hasAttachments;
-  const isMultiline = (hasText && isExpanded) || hasAttachments || attachmentError !== null;
+  const composerError = attachmentError ?? voiceError;
+  const isRecording = voiceStatus === 'recording';
+  const isTranscribing = voiceStatus === 'transcribing';
+  const isMultiline = (hasText && isExpanded) || hasAttachments || composerError !== null;
   const isGenerating = status === 'submitted' || status === 'streaming';
-  const isBusy = isLoading || isGenerating || isUploading;
+  const isBusy = isLoading || isGenerating || isUploading || isTranscribing;
+
+  useEffect(() => {
+    return () => {
+      if (mediaRecorderRef.current?.state === 'recording') {
+        mediaRecorderRef.current.stop();
+      }
+
+      mediaStreamRef.current?.getTracks().forEach((track) => track.stop());
+    };
+  }, []);
 
   const openFilePicker = () => {
     fileInputRef.current?.click();
@@ -71,6 +89,125 @@ export default function ChatComposer({
     const files = Array.from(event.target.files ?? []);
     event.target.value = '';
     void attachFiles(files);
+  };
+
+  const appendTranscribedText = (text: string) => {
+    const trimmedText = text.trim();
+
+    if (!trimmedText) {
+      setVoiceError('No speech was detected.');
+      return;
+    }
+
+    const nextInput = input.trim() ? `${input.trimEnd()} ${trimmedText}` : trimmedText;
+    setInputAction(nextInput);
+    setIsExpanded(nextInput.includes('\n') || nextInput.length > 80);
+    textareaRef.current?.focus();
+  };
+
+  const transcribeAudio = async (audioBlob: Blob) => {
+    const formData = new FormData();
+    const extension = audioBlob.type.includes('mp4') ? 'm4a' : 'webm';
+
+    formData.append('audio', audioBlob, `voice-input.${extension}`);
+
+    const res = await fetch('/api/audio/transcribe', {
+      method: 'POST',
+      body: formData,
+    });
+
+    const data = (await res.json().catch(() => null)) as { text?: string; error?: string } | null;
+
+    if (!res.ok) {
+      throw new Error(data?.error || 'Transcribe audio failed');
+    }
+
+    appendTranscribedText(data?.text ?? '');
+  };
+
+  const stopRecording = () => {
+    const recorder = mediaRecorderRef.current;
+
+    if (recorder?.state === 'recording') {
+      recorder.stop();
+    }
+  };
+
+  const startRecording = async () => {
+    if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === 'undefined') {
+      setVoiceError('Voice input is not supported in this browser.');
+      return;
+    }
+
+    setVoiceError(null);
+    audioChunksRef.current = [];
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const supportedMimeType = [
+        'audio/webm;codecs=opus',
+        'audio/webm',
+        'audio/mp4',
+      ].find((type) => MediaRecorder.isTypeSupported(type));
+      const recorder = new MediaRecorder(
+        stream,
+        supportedMimeType ? { mimeType: supportedMimeType } : undefined,
+      );
+
+      mediaStreamRef.current = stream;
+      mediaRecorderRef.current = recorder;
+
+      recorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+
+      recorder.onstop = () => {
+        const audioBlob = new Blob(audioChunksRef.current, {
+          type: recorder.mimeType || 'audio/webm',
+        });
+
+        mediaStreamRef.current?.getTracks().forEach((track) => track.stop());
+        mediaStreamRef.current = null;
+        mediaRecorderRef.current = null;
+
+        if (audioBlob.size === 0) {
+          setVoiceStatus('idle');
+          setVoiceError('No audio was recorded.');
+          return;
+        }
+
+        setVoiceStatus('transcribing');
+        void transcribeAudio(audioBlob)
+          .catch((error) => {
+            setVoiceError(error instanceof Error ? error.message : 'Transcribe audio failed');
+          })
+          .finally(() => {
+            setVoiceStatus('idle');
+          });
+      };
+
+      recorder.start();
+      setVoiceStatus('recording');
+    } catch (error) {
+      mediaStreamRef.current?.getTracks().forEach((track) => track.stop());
+      mediaStreamRef.current = null;
+      mediaRecorderRef.current = null;
+      setVoiceStatus('idle');
+      setVoiceError(error instanceof Error ? error.message : 'Microphone permission was denied.');
+    }
+  };
+
+  const handleMicAction = () => {
+    if (isRecording) {
+      stopRecording();
+      return;
+    }
+
+    if (isBusy) return;
+
+    void startRecording();
   };
 
   const handleSubmit = () => {
@@ -143,7 +280,7 @@ export default function ChatComposer({
           <>
             <ComposerAttachments
               attachments={attachments}
-              error={attachmentError}
+              error={composerError}
               isUploading={isUploading}
               removeAttachmentAction={removeAttachment}
             />
@@ -173,7 +310,11 @@ export default function ChatComposer({
         isGenerating={isGenerating}
         isLoading={isLoading}
         isMultiline={isMultiline}
+        isRecording={isRecording}
+        isTranscribing={isTranscribing}
         isUploading={isUploading}
+        micDisabled={!isRecording && isBusy}
+        micAction={handleMicAction}
         openFilePickerAction={openFilePicker}
         primaryAction={handlePrimaryAction}
         selectedModel={selectedModel}
