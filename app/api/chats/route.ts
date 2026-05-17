@@ -54,8 +54,6 @@ export async function GET() {
       .where(eq(chats.userId, user.id))
       .orderBy(desc(chats.updatedAt));
 
-    console.log('chats data: ', chatsData);
-
     return NextResponse.json(chatsData, { status: 200 });
   } catch (error) {
     console.log('GET /api/chats failed:', error);

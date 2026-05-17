@@ -6,6 +6,7 @@ import ComposerTextarea from './composer-textarea';
 import ComposerToolbar, { ComposerAttachButton } from './composer-toolbar';
 import { ACCEPTED_FILE_INPUT } from './composer-utils';
 import useComposerAttachments from './use-composer-attachments';
+import useComposerStt from './use-composer-stt';
 import { cn } from '@/lib/utils';
 import { type ChatModelId } from '@/lib/ai/models';
 import type { MessageAttachment } from '@/lib/ai/types';
@@ -59,9 +60,18 @@ export default function ChatComposer({
   const hasText = input.trim().length > 0;
   const hasAttachments = attachments.length > 0;
   const hasContent = hasText || hasAttachments;
-  const isMultiline = (hasText && isExpanded) || hasAttachments || attachmentError !== null;
   const isGenerating = status === 'submitted' || status === 'streaming';
-  const isBusy = isLoading || isGenerating || isUploading;
+  const isComposerBusy = isLoading || isGenerating || isUploading;
+  const { isRecording, isTranscribing, toggleRecording, voiceError } = useComposerStt({
+    input,
+    isDisabled: isComposerBusy,
+    expandComposerAction: setIsExpanded,
+    focusComposerAction: () => textareaRef.current?.focus(),
+    setInputAction,
+  });
+  const composerError = attachmentError ?? voiceError;
+  const isMultiline = (hasText && isExpanded) || hasAttachments || composerError !== null;
+  const isBusy = isComposerBusy || isTranscribing;
 
   const openFilePicker = () => {
     fileInputRef.current?.click();
@@ -143,7 +153,7 @@ export default function ChatComposer({
           <>
             <ComposerAttachments
               attachments={attachments}
-              error={attachmentError}
+              error={composerError}
               isUploading={isUploading}
               removeAttachmentAction={removeAttachment}
             />
@@ -173,7 +183,11 @@ export default function ChatComposer({
         isGenerating={isGenerating}
         isLoading={isLoading}
         isMultiline={isMultiline}
+        isRecording={isRecording}
+        isTranscribing={isTranscribing}
         isUploading={isUploading}
+        micDisabled={!isRecording && isBusy}
+        micAction={toggleRecording}
         openFilePickerAction={openFilePicker}
         primaryAction={handlePrimaryAction}
         selectedModel={selectedModel}
