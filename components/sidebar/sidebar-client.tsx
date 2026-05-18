@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client';
+import { useNotification } from '@/components/ui/notification';
 import RecentChats from './sidebar-chat-list';
 import SidebarHeader from './sidebar-header';
 import SidebarUserSection from './sidebar-user-section';
@@ -27,7 +28,11 @@ type Props = {
 };
 
 export default function SidebarClient({ initialChats, user }: Props) {
-  const { chats, deleteChat: deleteSidebarChat, renameChat } = useSidebarChats(initialChats);
+  const { notify } = useNotification();
+  const { chats, deleteChat: deleteSidebarChat, renameChat } = useSidebarChats(
+    initialChats,
+    notify,
+  );
   const [openMenuChatId, setOpenMenuChatId] = useState<string | null>(null);
   const [isRecentOpen, setIsRecentOpen] = useState(true);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
@@ -115,7 +120,11 @@ export default function SidebarClient({ initialChats, user }: Props) {
     const { error } = await supabase.auth.signOut();
 
     if (error) {
-      alert(error.message);
+      notify({
+        title: 'Could not sign out',
+        description: error.message,
+        type: 'error',
+      });
       return;
     }
 
@@ -184,6 +193,7 @@ export default function SidebarClient({ initialChats, user }: Props) {
               onDeleteChat={(chatId) => void deleteChat(chatId)}
               onEditingTitleChange={setEditingTitle}
               onChatMenuOpenChange={setChatMenuOpen}
+              onNewChat={newChat}
               onSaveEditing={(chatId) => void saveChatEditing(chatId)}
               onStartEditing={startChatEditing}
               onToggleOpen={toggleRecent}

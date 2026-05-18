@@ -1,6 +1,6 @@
 'use client';
 
-import { FileText, X } from 'lucide-react';
+import { AlertCircle, FileText, LoaderCircle, X } from 'lucide-react';
 import { formatFileSize, type ComposerAttachment } from './composer-utils';
 
 type Props = {
@@ -8,6 +8,7 @@ type Props = {
   error: string | null;
   isUploading: boolean;
   removeAttachmentAction: (attachmentId: string) => void;
+  statusMessage?: string | null;
 };
 
 export default function ComposerAttachments({
@@ -15,6 +16,7 @@ export default function ComposerAttachments({
   error,
   isUploading,
   removeAttachmentAction,
+  statusMessage,
 }: Props) {
   return (
     <>
@@ -43,9 +45,21 @@ export default function ComposerAttachments({
         </div>
       ) : null}
 
-      {error ? <p className="pr-3 pt-2 text-sm leading-5 text-destructive">{error}</p> : null}
-      {isUploading ? (
-        <p className="pr-3 pt-2 text-sm leading-5 text-muted-foreground">Uploading file...</p>
+      {error ? (
+        <div className="flex items-start gap-2 pr-3 pt-2 text-sm leading-5 text-destructive">
+          <AlertCircle className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+          <span>{error}</span>
+        </div>
+      ) : null}
+      {isUploading || statusMessage ? (
+        <div className="flex items-center gap-2 pr-3 pt-2 text-sm leading-5 text-muted-foreground">
+          <LoaderCircle
+            className="size-4 shrink-0 animate-spin"
+            strokeWidth={2.4}
+            aria-hidden="true"
+          />
+          <span>{statusMessage ?? 'Uploading file...'}</span>
+        </div>
       ) : null}
     </>
   );

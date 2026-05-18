@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import AppHeader from '@/components/layout/app-header';
+import { useNotification } from '@/components/ui/notification';
 import ChatComposer from '@/features/chat/composer/chat-composer';
 import { defaultChatModel, type ChatModelId } from '@/lib/ai/models';
 import type { MessageAttachment } from '@/lib/ai/types';
@@ -45,20 +46,23 @@ export default function Home() {
   const [selectedModel, setSelectedModel] = useState<ChatModelId>(defaultChatModel.id);
   const [draftChatId, setDraftChatId] = useState<string | null>(null);
   const router = useRouter();
+  const { notify } = useNotification();
 
-  const createChat = async (title: string) => {
+  const createChat = async (title: string, id?: string) => {
     const res = await fetch('/api/chats', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
+        id,
         title: title || 'New chat',
       }),
     });
 
     if (!res.ok) {
-      throw new Error('Create chat failed');
+      const data = await res.json().catch(() => null);
+      throw new Error(data?.error || 'Create chat failed');
     }
 
     const chat = (await res.json()) as { id: string };
@@ -93,9 +97,13 @@ export default function Home() {
     setLoading(true);
 
     try {
+      const nextChatId = draftChatId ?? crypto.randomUUID();
       const chat = draftChatId
         ? { id: draftChatId }
-        : await createChat(message.slice(0, 20) || attachments[0]?.fileName.slice(0, 20));
+        : await createChat(
+            message.slice(0, 20) || attachments[0]?.fileName.slice(0, 20),
+            nextChatId,
+          );
 
       sessionStorage.setItem(`chat:${chat.id}:pending-message`, message);
       sessionStorage.setItem(`chat:${chat.id}:pending-model`, selectedModel);
@@ -105,6 +113,11 @@ export default function Home() {
       router.push(`/chat/${chat.id}`);
     } catch (error) {
       console.error('Create chat error:', error);
+      notify({
+        title: 'Could not start chat',
+        description: error instanceof Error ? error.message : 'Try again in a moment.',
+        type: 'error',
+      });
     } finally {
       setLoading(false);
     }

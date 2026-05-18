@@ -3,6 +3,7 @@ import { chats } from '@/db/schema';
 import { NextResponse } from 'next/server';
 import { desc, eq } from 'drizzle-orm';
 import { getCurrentUser } from '@/lib/auth/get-current-user';
+import { uuidSchema } from '@/lib/validations/common';
 
 export async function POST(req: Request) {
   try {
@@ -15,13 +16,19 @@ export async function POST(req: Request) {
 
     // Accept optional title from the client; fallback keeps UX predictable when
     // a brand-new chat is created before any message exists.
-    const { title } = await req.json();
+    const { id, title } = await req.json();
+    const parsedId = typeof id === 'string' ? uuidSchema.safeParse(id) : null;
+
+    if (id && !parsedId?.success) {
+      return NextResponse.json({ error: 'Invalid chat id' }, { status: 400 });
+    }
 
     // Seed the chat with a simple title. It can be replaced later by the first
     // user message or by an explicit rename action.
     const [chat] = await db
       .insert(chats)
       .values({
+        ...(parsedId?.success ? { id: parsedId.data } : {}),
         userId: user.id,
         title: title || 'New chat',
       })

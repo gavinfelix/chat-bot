@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import ThemeProvider from "@/components/theme/theme-provider";
+import { NotificationProvider } from "@/components/ui/notification";
 import 'highlight.js/styles/github.css';
 import 'highlight.js/styles/github-dark.css';
 import "./globals.css";
@@ -48,7 +49,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col">
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         <ThemeProvider />
-        {children}
+        <NotificationProvider>{children}</NotificationProvider>
       </body>
     </html>
   );

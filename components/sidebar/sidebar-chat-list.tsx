@@ -1,7 +1,8 @@
 import type { RefObject } from 'react';
 import Link from 'next/link';
-import { ChevronDown, Ellipsis } from 'lucide-react';
+import { ChevronDown, Ellipsis, MessageSquarePlus } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import ChatActionsMenu from './sidebar-chat-actions-menu';
@@ -22,6 +23,7 @@ type Props = {
   onDeleteChat: (chatId: string) => void;
   onEditingTitleChange: (title: string) => void;
   onChatMenuOpenChange: (chat: Chat, open: boolean) => void;
+  onNewChat: () => void;
   onSaveEditing: (chatId: string) => void;
   onStartEditing: (chat: Chat) => void;
   onToggleOpen: () => void;
@@ -39,6 +41,7 @@ export default function RecentChats({
   onDeleteChat,
   onEditingTitleChange,
   onChatMenuOpenChange,
+  onNewChat,
   onSaveEditing,
   onStartEditing,
   onToggleOpen,
@@ -62,6 +65,31 @@ export default function RecentChats({
 
       {isOpen ? (
         <div id="recent-chat-list" className="space-y-0.5 px-2">
+          {chats.length === 0 ? (
+            <div className="mx-1 rounded-lg border border-dashed border-border px-3 py-3 text-sm">
+              <div className="flex items-start gap-2">
+                <MessageSquarePlus
+                  className="mt-0.5 size-4 shrink-0 text-muted-foreground"
+                  aria-hidden="true"
+                />
+                <div className="min-w-0">
+                  <p className="font-medium text-foreground">No chats yet</p>
+                  <p className="mt-1 leading-5 text-muted-foreground">
+                    Start a conversation to keep it here.
+                  </p>
+                  <Button
+                    className="mt-3 h-7 rounded-md px-2 text-xs"
+                    size="sm"
+                    type="button"
+                    variant="outline"
+                    onClick={onNewChat}
+                  >
+                    New chat
+                  </Button>
+                </div>
+              </div>
+            </div>
+          ) : null}
           {chats.map((chat) => (
             <div className="group relative" key={chat.id}>
               {editingChatId === chat.id ? (
