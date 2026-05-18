@@ -1,9 +1,11 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { AlertCircle, Check, Copy, FileText, RefreshCw, ThumbsDown, ThumbsUp } from 'lucide-react';
+import { Check, Copy, ThumbsDown, ThumbsUp } from 'lucide-react';
 import { UIMessage } from 'ai';
+import AssistantErrorBlock from './assistant-error-block';
 import MarkdownContent from './markdown-content';
+import MessageAttachmentCards from './message-attachments';
 import { cn } from '@/lib/utils';
 import { ChatMessageMetadata } from '@/lib/ai/types';
 import { getChatModel } from '@/lib/ai/models';
@@ -31,54 +33,6 @@ function MessageTextParts({ message, markdown }: { message: ChatMessage; markdow
       </div>
     );
   });
-}
-
-function formatFileSize(size: number) {
-  if (size < 1024) return `${size} B`;
-  if (size < 1024 * 1024) return `${Math.round(size / 1024)} KB`;
-
-  return `${(size / (1024 * 1024)).toFixed(1)} MB`;
-}
-
-function MessageAttachmentCards({ message }: { message: ChatMessage }) {
-  const attachments = message.metadata?.attachments ?? [];
-
-  if (attachments.length === 0) return null;
-
-  return (
-    <div className="mb-2 flex flex-wrap gap-2">
-      {attachments.map((attachment) => {
-        const content = (
-          <>
-            <FileText className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-            <span className="min-w-0 truncate">{attachment.fileName}</span>
-            <span className="shrink-0 text-xs text-muted-foreground">
-              {formatFileSize(attachment.size)}
-            </span>
-          </>
-        );
-
-        return attachment.url ? (
-          <a
-            key={attachment.id}
-            href={attachment.url}
-            target="_blank"
-            rel="noreferrer"
-            className="flex h-8 max-w-full items-center gap-2 rounded-md border border-border bg-background/65 px-2 text-sm text-foreground transition-colors hover:bg-background"
-          >
-            {content}
-          </a>
-        ) : (
-          <div
-            key={attachment.id}
-            className="flex h-8 max-w-full items-center gap-2 rounded-md border border-border bg-background/65 px-2 text-sm text-foreground"
-          >
-            {content}
-          </div>
-        );
-      })}
-    </div>
-  );
 }
 
 function IconActionButton({
@@ -247,54 +201,20 @@ export function AssistantMessage({
 }) {
   const text = useMemo(() => getMessageText(message), [message]);
   const messageStatus = message.metadata?.status;
-  const errorMessage = message.metadata?.error;
   const modelLabel = message.metadata?.model ? getChatModel(message.metadata.model).label : null;
   const isRecoverable = messageStatus === 'error' || messageStatus === 'aborted';
-  const recoverLabel = messageStatus === 'aborted' ? 'Continue' : 'Retry';
 
   return (
     <div className="w-full text-foreground">
       <MessageTextParts markdown message={message} />
       {isRecoverable ? (
-        <div
-          className={cn(
-            'mt-2 flex max-w-2xl items-start gap-3 rounded-lg border px-3 py-2.5 text-sm',
-            messageStatus === 'error'
-              ? 'border-destructive/25 bg-destructive/5'
-              : 'border-border bg-muted/35',
-          )}
-        >
-          <AlertCircle
-            className={cn(
-              'mt-0.5 size-4 shrink-0',
-              messageStatus === 'error' ? 'text-destructive' : 'text-muted-foreground',
-            )}
-            aria-hidden="true"
-          />
-          <div className="min-w-0 flex-1">
-            <p className="font-medium">
-              {messageStatus === 'aborted' ? 'Generation stopped' : 'Generation failed'}
-            </p>
-            {messageStatus === 'error' ? (
-              <p className="mt-0.5 break-words leading-5 text-muted-foreground">
-                {errorMessage || 'The model could not finish this response.'}
-              </p>
-            ) : (
-              <p className="mt-0.5 leading-5 text-muted-foreground">
-                Continue when you are ready.
-              </p>
-            )}
-          </div>
-          <button
-            type="button"
-            disabled={feedbackDisabled}
-            className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full px-2.5 text-foreground transition-colors hover:bg-muted disabled:pointer-events-none disabled:opacity-50"
-            onClick={() => regenerateMessageAction(message.id)}
-          >
-            <RefreshCw className="size-3.5" strokeWidth={2} aria-hidden="true" />
-            <span>{recoverLabel}</span>
-          </button>
-        </div>
+        <AssistantErrorBlock
+          disabled={feedbackDisabled}
+          errorMessage={message.metadata?.error}
+          messageId={message.id}
+          regenerateMessageAction={regenerateMessageAction}
+          status={messageStatus}
+        />
       ) : null}
       {text.trim() ? (
         <div className="mt-1 flex items-center gap-1">

@@ -5,8 +5,14 @@ import { UIMessage, DefaultChatTransport } from 'ai';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useLayoutEffect, useRef, useMemo } from 'react';
 import { ChatMessageMetadata, DbMessage, type MessageAttachment } from '@/lib/ai/types';
-import { defaultChatModel, isChatModelId, type ChatModelId } from '@/lib/ai/models';
+import { type ChatModelId } from '@/lib/ai/models';
 import { useNotification } from '@/components/ui/notification';
+import {
+  clearPendingMessage,
+  createPendingUserMessage,
+  hasPendingMessage,
+  readPendingMessage,
+} from './pending-message-storage';
 
 type ScrollToBottomAction = () => void;
 
@@ -14,51 +20,6 @@ type UseChatSessionParams = {
   chatId: string;
   afterPendingMessageSentAction?: ScrollToBottomAction;
 };
-
-const parsePendingAttachments = (value: string | null): MessageAttachment[] => {
-  if (!value) return [];
-
-  try {
-    const parsedValue = JSON.parse(value);
-
-    if (!Array.isArray(parsedValue)) return [];
-
-    return parsedValue.filter(
-      (attachment): attachment is MessageAttachment =>
-        typeof attachment === 'object' &&
-        attachment !== null &&
-        typeof attachment.id === 'string' &&
-        typeof attachment.fileName === 'string' &&
-        typeof attachment.mimeType === 'string' &&
-        typeof attachment.size === 'number' &&
-        typeof attachment.status === 'string' &&
-        typeof attachment.createdAt === 'string',
-    );
-  } catch {
-    return [];
-  }
-};
-
-const parsePendingAttachmentIds = (value: string | null): string[] => {
-  if (!value) return [];
-
-  try {
-    const parsedValue = JSON.parse(value);
-
-    if (!Array.isArray(parsedValue)) return [];
-
-    return parsedValue.filter((attachmentId): attachmentId is string => typeof attachmentId === 'string');
-  } catch {
-    return [];
-  }
-};
-
-const getPendingMessageKeys = (chatId: string) => ({
-  pendingAttachmentIdsKey: `chat:${chatId}:pending-attachment-ids`,
-  pendingAttachmentsKey: `chat:${chatId}:pending-attachments`,
-  pendingMessageKey: `chat:${chatId}:pending-message`,
-  pendingModelKey: `chat:${chatId}:pending-model`,
-});
 
 export default function useChatSession({
   chatId,
@@ -103,29 +64,10 @@ export default function useChatSession({
 
     async function loadMessages() {
       try {
-        const {
-          pendingAttachmentIdsKey,
-          pendingAttachmentsKey,
-          pendingMessageKey,
-          pendingModelKey,
-        } = getPendingMessageKeys(chatId);
-        const pendingMessage = sessionStorage.getItem(pendingMessageKey);
-        const pendingAttachmentIds = parsePendingAttachmentIds(
-          sessionStorage.getItem(pendingAttachmentIdsKey),
-        );
-        const pendingAttachments = parsePendingAttachments(
-          sessionStorage.getItem(pendingAttachmentsKey),
-        );
+        const pendingMessage = readPendingMessage(chatId);
 
-        if (pendingMessage || pendingAttachmentIds.length > 0) {
-          setMessages([
-            {
-              id: crypto.randomUUID(),
-              role: 'user',
-              metadata: { attachments: pendingAttachments } satisfies ChatMessageMetadata,
-              parts: [{ type: 'text', text: pendingMessage ?? '' }],
-            },
-          ]);
+        if (hasPendingMessage(pendingMessage)) {
+          setMessages([createPendingUserMessage(pendingMessage)]);
           afterPendingMessageSentActionRef.current?.();
         }
 
@@ -172,23 +114,18 @@ export default function useChatSession({
 
         if (cancelled) return;
 
-        const pendingModel = sessionStorage.getItem(pendingModelKey);
+        if (!hasPendingMessage(pendingMessage)) return;
 
-        if (!pendingMessage && pendingAttachmentIds.length === 0) return;
-
-        sessionStorage.removeItem(pendingMessageKey);
-        sessionStorage.removeItem(pendingModelKey);
-        sessionStorage.removeItem(pendingAttachmentIdsKey);
-        sessionStorage.removeItem(pendingAttachmentsKey);
+        clearPendingMessage(chatId);
         sendMessage(
           {
-            text: pendingMessage ?? '',
-            metadata: { attachments: pendingAttachments } satisfies ChatMessageMetadata,
+            text: pendingMessage.message ?? '',
+            metadata: { attachments: pendingMessage.attachments } satisfies ChatMessageMetadata,
           },
           {
             body: {
-              attachmentIds: pendingAttachmentIds,
-              model: isChatModelId(pendingModel) ? pendingModel : defaultChatModel.id,
+              attachmentIds: pendingMessage.attachmentIds,
+              model: pendingMessage.model,
             },
           },
         );
