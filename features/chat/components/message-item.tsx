@@ -1,12 +1,13 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { Check, Copy, FileText, RefreshCw, ThumbsDown, ThumbsUp } from 'lucide-react';
+import { AlertCircle, Check, Copy, FileText, RefreshCw, ThumbsDown, ThumbsUp } from 'lucide-react';
 import { UIMessage } from 'ai';
 import MarkdownContent from './markdown-content';
 import { cn } from '@/lib/utils';
 import { ChatMessageMetadata } from '@/lib/ai/types';
 import { getChatModel } from '@/lib/ai/models';
+import { useNotification } from '@/components/ui/notification';
 
 type ChatMessage = UIMessage<ChatMessageMetadata>;
 type MessageReaction = NonNullable<ChatMessageMetadata['reaction']>;
@@ -146,6 +147,7 @@ function AssistantFeedbackButtons({
   disabled?: boolean;
   message: ChatMessage;
 }) {
+  const { notify } = useNotification();
   const [reaction, setReaction] = useState<ChatMessageMetadata['reaction']>(
     message.metadata?.reaction ?? null,
   );
@@ -172,6 +174,11 @@ function AssistantFeedbackButtons({
     } catch (error) {
       console.error('Update message reaction failed:', error);
       setReaction(reaction);
+      notify({
+        title: 'Could not save feedback',
+        description: 'Your response rating was not saved.',
+        type: 'error',
+      });
     } finally {
       setIsSaving(false);
     }
@@ -240,6 +247,7 @@ export function AssistantMessage({
 }) {
   const text = useMemo(() => getMessageText(message), [message]);
   const messageStatus = message.metadata?.status;
+  const errorMessage = message.metadata?.error;
   const modelLabel = message.metadata?.model ? getChatModel(message.metadata.model).label : null;
   const isRecoverable = messageStatus === 'error' || messageStatus === 'aborted';
   const recoverLabel = messageStatus === 'aborted' ? 'Continue' : 'Retry';
@@ -248,12 +256,39 @@ export function AssistantMessage({
     <div className="w-full text-foreground">
       <MessageTextParts markdown message={message} />
       {isRecoverable ? (
-        <div className="mt-1 flex items-center gap-2 text-sm text-muted-foreground">
-          <span>{messageStatus === 'aborted' ? 'Generation stopped.' : 'Generation failed.'}</span>
+        <div
+          className={cn(
+            'mt-2 flex max-w-2xl items-start gap-3 rounded-lg border px-3 py-2.5 text-sm',
+            messageStatus === 'error'
+              ? 'border-destructive/25 bg-destructive/5'
+              : 'border-border bg-muted/35',
+          )}
+        >
+          <AlertCircle
+            className={cn(
+              'mt-0.5 size-4 shrink-0',
+              messageStatus === 'error' ? 'text-destructive' : 'text-muted-foreground',
+            )}
+            aria-hidden="true"
+          />
+          <div className="min-w-0 flex-1">
+            <p className="font-medium">
+              {messageStatus === 'aborted' ? 'Generation stopped' : 'Generation failed'}
+            </p>
+            {messageStatus === 'error' ? (
+              <p className="mt-0.5 break-words leading-5 text-muted-foreground">
+                {errorMessage || 'The model could not finish this response.'}
+              </p>
+            ) : (
+              <p className="mt-0.5 leading-5 text-muted-foreground">
+                Continue when you are ready.
+              </p>
+            )}
+          </div>
           <button
             type="button"
             disabled={feedbackDisabled}
-            className="inline-flex h-8 items-center gap-1.5 rounded-full px-2.5 text-foreground transition-colors hover:bg-muted disabled:pointer-events-none disabled:opacity-50"
+            className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full px-2.5 text-foreground transition-colors hover:bg-muted disabled:pointer-events-none disabled:opacity-50"
             onClick={() => regenerateMessageAction(message.id)}
           >
             <RefreshCw className="size-3.5" strokeWidth={2} aria-hidden="true" />

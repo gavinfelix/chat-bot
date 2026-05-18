@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useLayoutEffect, useRef, useMemo } from 'react';
 import { ChatMessageMetadata, DbMessage, type MessageAttachment } from '@/lib/ai/types';
 import { defaultChatModel, isChatModelId, type ChatModelId } from '@/lib/ai/models';
+import { useNotification } from '@/components/ui/notification';
 
 type ScrollToBottomAction = () => void;
 
@@ -52,11 +53,19 @@ const parsePendingAttachmentIds = (value: string | null): string[] => {
   }
 };
 
+const getPendingMessageKeys = (chatId: string) => ({
+  pendingAttachmentIdsKey: `chat:${chatId}:pending-attachment-ids`,
+  pendingAttachmentsKey: `chat:${chatId}:pending-attachments`,
+  pendingMessageKey: `chat:${chatId}:pending-message`,
+  pendingModelKey: `chat:${chatId}:pending-model`,
+});
+
 export default function useChatSession({
   chatId,
   afterPendingMessageSentAction,
 }: UseChatSessionParams) {
   const router = useRouter();
+  const { notify } = useNotification();
 
   const transport = useMemo(
     () =>
@@ -74,6 +83,13 @@ export default function useChatSession({
     onFinish: () => {
       window.dispatchEvent(new Event('chats:refresh'));
     },
+    onError: (error) => {
+      notify({
+        title: 'Message failed',
+        description: error.message || 'The assistant could not complete this response.',
+        type: 'error',
+      });
+    },
   });
 
   const afterPendingMessageSentActionRef = useRef(afterPendingMessageSentAction);
@@ -87,10 +103,40 @@ export default function useChatSession({
 
     async function loadMessages() {
       try {
+        const {
+          pendingAttachmentIdsKey,
+          pendingAttachmentsKey,
+          pendingMessageKey,
+          pendingModelKey,
+        } = getPendingMessageKeys(chatId);
+        const pendingMessage = sessionStorage.getItem(pendingMessageKey);
+        const pendingAttachmentIds = parsePendingAttachmentIds(
+          sessionStorage.getItem(pendingAttachmentIdsKey),
+        );
+        const pendingAttachments = parsePendingAttachments(
+          sessionStorage.getItem(pendingAttachmentsKey),
+        );
+
+        if (pendingMessage || pendingAttachmentIds.length > 0) {
+          setMessages([
+            {
+              id: crypto.randomUUID(),
+              role: 'user',
+              metadata: { attachments: pendingAttachments } satisfies ChatMessageMetadata,
+              parts: [{ type: 'text', text: pendingMessage ?? '' }],
+            },
+          ]);
+          afterPendingMessageSentActionRef.current?.();
+        }
+
         const res = await fetch(`/api/chats/${chatId}/messages`);
 
         if (!res.ok) {
-          console.error('Load messages failed');
+          notify({
+            title: 'Could not load messages',
+            description: 'Refresh the page or try another chat.',
+            type: 'error',
+          });
           return;
         }
 
@@ -126,18 +172,7 @@ export default function useChatSession({
 
         if (cancelled) return;
 
-        const pendingMessageKey = `chat:${chatId}:pending-message`;
-        const pendingModelKey = `chat:${chatId}:pending-model`;
-        const pendingAttachmentIdsKey = `chat:${chatId}:pending-attachment-ids`;
-        const pendingAttachmentsKey = `chat:${chatId}:pending-attachments`;
-        const pendingMessage = sessionStorage.getItem(pendingMessageKey);
         const pendingModel = sessionStorage.getItem(pendingModelKey);
-        const pendingAttachmentIds = parsePendingAttachmentIds(
-          sessionStorage.getItem(pendingAttachmentIdsKey),
-        );
-        const pendingAttachments = parsePendingAttachments(
-          sessionStorage.getItem(pendingAttachmentsKey),
-        );
 
         if (!pendingMessage && pendingAttachmentIds.length === 0) return;
 
@@ -160,6 +195,11 @@ export default function useChatSession({
         afterPendingMessageSentActionRef.current?.();
       } catch (error) {
         console.error('Load messages error:', error);
+        notify({
+          title: 'Could not load messages',
+          description: error instanceof Error ? error.message : 'Refresh the page or try again.',
+          type: 'error',
+        });
       }
     }
 
@@ -168,7 +208,7 @@ export default function useChatSession({
     return () => {
       cancelled = true;
     };
-  }, [chatId, sendMessage, setMessages]);
+  }, [chatId, notify, sendMessage, setMessages]);
 
   const sendTextMessage = (
     text: string,
@@ -198,7 +238,11 @@ export default function useChatSession({
     });
 
     if (!res.ok) {
-      console.error('Delete chat failed');
+      notify({
+        title: 'Could not delete chat',
+        description: 'The chat was not deleted. Try again in a moment.',
+        type: 'error',
+      });
       return false;
     }
 
