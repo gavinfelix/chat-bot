@@ -68,6 +68,7 @@ export async function PATCH(req: Request, { params }: Params) {
       .set({
         // Keep title length bounded to avoid UI overflow and noisy DB values.
         title: nextTitle.slice(0, 50),
+        titleSource: 'manual',
         updatedAt: new Date(),
       })
       .where(and(eq(chats.id, chatId), eq(chats.userId, user.id)))

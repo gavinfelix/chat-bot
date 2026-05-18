@@ -29,6 +29,13 @@
       "when": 1778836804689,
       "tag": "0003_noisy_george_stacy",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1779112723127,
+      "tag": "0004_special_rockslide",
+      "breakpoints": true
     }
   ]
 }

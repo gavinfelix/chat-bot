@@ -1,12 +1,13 @@
 import { streamText, UIMessage, type LanguageModelUsage } from 'ai';
 import { db } from '@/db';
 import { attachments as attachmentsTable, chats as chatsTable } from '@/db/schema';
-import { and, eq, inArray } from 'drizzle-orm';
+import { and, eq, inArray, ne } from 'drizzle-orm';
 import { getCurrentUser } from '@/lib/auth/get-current-user';
 import { chatStreamRequestSchema, uuidSchema } from '@/lib/validations/common';
 import { getMessageText, createTextParts, getErrorMessage } from '@/lib/ai/message-utils';
 import { buildModelMessages, buildModelPrompt } from '@/lib/ai/context';
 import { getChatModel } from '@/lib/ai/models';
+import { createFallbackChatTitle, generateChatTitle } from '@/lib/ai/title';
 import {
   saveAssistantMessage,
   saveUserMessage,
@@ -51,7 +52,7 @@ export async function POST(req: Request, { params }: Params) {
 
     // Refuse the request if the target chat does not belong to the current user.
     const [chat] = await db
-      .select({ id: chatsTable.id })
+      .select({ id: chatsTable.id, titleSource: chatsTable.titleSource })
       .from(chatsTable)
       .where(and(eq(chatsTable.id, parsedChatId.data), eq(chatsTable.userId, user.id)))
       .limit(1);
@@ -120,18 +121,20 @@ export async function POST(req: Request, { params }: Params) {
         );
     }
 
-    // Keep the chat list fresh, and use the first user message as a simple title seed.
+    // Keep the chat list fresh, and seed first-message chats with a quick fallback title.
     const isFirstMessage = messages.length === 1;
 
-    const title =
-      userMessageContent.slice(0, 20) ||
-      messageAttachments[0]?.fileName.slice(0, 20) ||
-      'New chat';
+    const fallbackTitle = createFallbackChatTitle({
+      attachmentNames: messageAttachments.map((attachment) => attachment.fileName),
+      text: userMessageContent,
+    });
     await db
       .update(chatsTable)
       .set({
         updatedAt: new Date(),
-        ...(isFirstMessage ? { title } : {}),
+        ...(isFirstMessage && chat.titleSource !== 'manual'
+          ? { title: fallbackTitle, titleSource: 'fallback' as const }
+          : {}),
       })
       .where(and(eq(chatsTable.id, parsedChatId.data), eq(chatsTable.userId, user.id)));
 
@@ -271,6 +274,33 @@ export async function POST(req: Request, { params }: Params) {
             },
             selectedModel.id,
           );
+
+          if (isFirstMessage && chat.titleSource !== 'manual') {
+            try {
+              const title = await generateChatTitle({
+                attachmentNames: messageAttachments.map((attachment) => attachment.fileName),
+                model: selectedModel.id,
+                text: userMessageContent,
+              });
+
+              await db
+                .update(chatsTable)
+                .set({
+                  title,
+                  titleSource: 'generated',
+                  updatedAt: new Date(),
+                })
+                .where(
+                  and(
+                    eq(chatsTable.id, parsedChatId.data),
+                    eq(chatsTable.userId, user.id),
+                    ne(chatsTable.titleSource, 'manual'),
+                  ),
+                );
+            } catch (error) {
+              console.error('Generate chat title failed:', error);
+            }
+          }
         } catch (error) {
           console.error('Save assistant message failed:', error);
         }
