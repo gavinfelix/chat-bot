@@ -70,7 +70,15 @@ export default function ChatComposer({
     setInputAction,
   });
   const composerError = attachmentError ?? voiceError;
-  const isMultiline = (hasText && isExpanded) || hasAttachments || composerError !== null;
+  const composerStatus = isRecording
+    ? 'Recording audio...'
+    : isTranscribing
+      ? 'Transcribing audio...'
+      : isUploading
+        ? 'Uploading file...'
+        : null;
+  const isMultiline =
+    (hasText && isExpanded) || hasAttachments || composerError !== null || composerStatus !== null;
   const isBusy = isComposerBusy || isTranscribing;
 
   const openFilePicker = () => {
@@ -156,6 +164,7 @@ export default function ChatComposer({
               error={composerError}
               isUploading={isUploading}
               removeAttachmentAction={removeAttachment}
+              statusMessage={composerStatus}
             />
 
             <ComposerTextarea
