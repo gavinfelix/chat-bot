@@ -5,7 +5,7 @@ type Chat = {
   title: string;
 };
 
-type RenameChat = (chatId: string, title: string) => Promise<void>;
+type RenameChat = (chatId: string, title: string) => Promise<boolean>;
 
 export default function useChatEditing(renameChat: RenameChat) {
   const [editingChatId, setEditingChatId] = useState<string | null>(null);
@@ -37,9 +37,13 @@ export default function useChatEditing(renameChat: RenameChat) {
       return false;
     }
 
-    await renameChat(chatId, nextTitle);
-    cancelEditing();
-    return true;
+    const saved = await renameChat(chatId, nextTitle);
+
+    if (saved) {
+      cancelEditing();
+    }
+
+    return saved;
   };
 
   return {
