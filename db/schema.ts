@@ -2,11 +2,13 @@ import { integer, jsonb, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-c
 import type { UIMessage } from 'ai';
 
 type MessageStatus = 'streaming' | 'completed' | 'aborted' | 'error';
+type ChatTitleSource = 'initial' | 'fallback' | 'generated' | 'manual';
 
 export const chats = pgTable('chat', {
   id: uuid('id').defaultRandom().primaryKey(),
   userId: text('user_id').notNull(),
   title: text('title').notNull(),
+  titleSource: text('title_source').$type<ChatTitleSource>().default('initial').notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });

@@ -31,6 +31,7 @@ export async function POST(req: Request) {
         ...(parsedId?.success ? { id: parsedId.data } : {}),
         userId: user.id,
         title: title || 'New chat',
+        titleSource: 'initial',
       })
       .returning({
         id: chats.id,

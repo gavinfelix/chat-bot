@@ -1,8 +1,23 @@
 import { UIMessage, convertToModelMessages, type ModelMessage } from 'ai';
 import { getMessageText } from './message-utils';
 
-const RECENT_CONTEXT_MESSAGE_LIMIT = 16;
-const SUMMARY_TEXT_LIMIT = 5000;
+export const CONTEXT_POLICY = {
+  recentMessageLimit: 16,
+  summaryTextLimit: 5000,
+} as const;
+
+type ContextStrategy = 'deterministic-summary' | 'recent-only';
+
+type BuildChatContextResult = {
+  metadata: {
+    estimatedInputChars: number;
+    recentMessageCount: number;
+    strategy: ContextStrategy;
+    summarizedMessageCount: number;
+    summaryApplied: boolean;
+  };
+  modelMessages: ModelMessage[];
+};
 
 export const createContextSummary = (messages: UIMessage[]) => {
   const summary = messages
@@ -14,7 +29,7 @@ export const createContextSummary = (messages: UIMessage[]) => {
     })
     .filter(Boolean)
     .join('\n')
-    .slice(0, SUMMARY_TEXT_LIMIT);
+    .slice(0, CONTEXT_POLICY.summaryTextLimit);
 
   if (!summary) return null;
 
@@ -26,18 +41,52 @@ export const createContextSummary = (messages: UIMessage[]) => {
   ] satisfies ModelMessage[];
 };
 
-export const buildModelMessages = async (messages: UIMessage[]) => {
-  if (messages.length <= RECENT_CONTEXT_MESSAGE_LIMIT) {
-    return convertToModelMessages(messages);
+function estimateModelMessageChars(messages: ModelMessage[]) {
+  return messages.reduce((total, message) => {
+    if (typeof message.content === 'string') {
+      return total + message.content.length;
+    }
+
+    return total + JSON.stringify(message.content).length;
+  }, 0);
+}
+
+export const buildChatContext = async (messages: UIMessage[]): Promise<BuildChatContextResult> => {
+  if (messages.length <= CONTEXT_POLICY.recentMessageLimit) {
+    const modelMessages = await convertToModelMessages(messages);
+
+    return {
+      metadata: {
+        estimatedInputChars: estimateModelMessageChars(modelMessages),
+        recentMessageCount: messages.length,
+        strategy: 'recent-only',
+        summarizedMessageCount: 0,
+        summaryApplied: false,
+      },
+      modelMessages,
+    };
   }
 
-  const olderMessages = messages.slice(0, -RECENT_CONTEXT_MESSAGE_LIMIT);
-  const recentMessages = messages.slice(-RECENT_CONTEXT_MESSAGE_LIMIT);
+  const olderMessages = messages.slice(0, -CONTEXT_POLICY.recentMessageLimit);
+  const recentMessages = messages.slice(-CONTEXT_POLICY.recentMessageLimit);
   const summaryMessages = createContextSummary(olderMessages) ?? [];
   const recentModelMessages = await convertToModelMessages(recentMessages);
+  const modelMessages = [...summaryMessages, ...recentModelMessages];
 
-  return [...summaryMessages, ...recentModelMessages];
+  return {
+    metadata: {
+      estimatedInputChars: estimateModelMessageChars(modelMessages),
+      recentMessageCount: recentMessages.length,
+      strategy: summaryMessages.length > 0 ? 'deterministic-summary' : 'recent-only',
+      summarizedMessageCount: summaryMessages.length > 0 ? olderMessages.length : 0,
+      summaryApplied: summaryMessages.length > 0,
+    },
+    modelMessages,
+  };
 };
+
+export const buildModelMessages = async (messages: UIMessage[]) =>
+  (await buildChatContext(messages)).modelMessages;
 
 function escapeAttachmentName(name: string) {
   return name

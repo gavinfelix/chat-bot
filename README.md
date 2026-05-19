@@ -40,6 +40,7 @@ The code favors explicit boundaries: route handlers own request validation and a
 - **User-scoped data access** for chats, messages, reactions, and attachments.
 - **Persistent chat history** backed by PostgreSQL and Drizzle ORM.
 - **Attachment-aware prompting** for `.txt` and `.md` files with size and ownership checks.
+- **Deterministic context management** that preserves recent messages and compresses older turns without adding a second model call.
 - **Speech-to-text composer input** powered by Deepgram.
 - **Markdown and code rendering** with syntax highlighting for assistant responses.
 - **Responsive app shell** with sidebar chat history, theme support, message actions, and auto-scroll behavior.
@@ -83,6 +84,15 @@ PostgreSQL + Drizzle
 4. Recent conversation context and attachment text are converted into model messages.
 5. The assistant response streams to the UI.
 6. The final assistant message, usage, finish reason, and error state are saved.
+
+**Manage context**
+
+1. The most recent 16 messages are preserved verbatim for the model.
+2. Older messages are compressed into a bounded deterministic system summary.
+3. Attachment text is scoped to the user message that introduced it.
+4. The app records context metadata such as strategy, recent message count, summarized message count, and estimated input size with the assistant message usage payload.
+
+This avoids a second summarization model call on every turn, keeping latency and cost predictable while leaving room for a future persisted AI summary strategy.
 
 **Attach a file**
 
@@ -239,4 +249,3 @@ The strongest implementation details are concentrated around ownership checks, e
 - Add rate limits for model, upload, and transcription endpoints.
 - Add object storage for uploaded files instead of storing extracted text only.
 - Add CI to run lint, build, migration checks, and tests on every pull request.
-
