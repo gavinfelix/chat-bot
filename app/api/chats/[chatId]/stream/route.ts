@@ -5,7 +5,7 @@ import { and, eq, inArray, ne } from 'drizzle-orm';
 import { getCurrentUser } from '@/lib/auth/get-current-user';
 import { chatStreamRequestSchema, uuidSchema } from '@/lib/validations/common';
 import { getMessageText, createTextParts, getErrorMessage } from '@/lib/ai/message-utils';
-import { buildModelMessages, buildModelPrompt } from '@/lib/ai/context';
+import { buildChatContext, buildModelPrompt } from '@/lib/ai/context';
 import { getChatModel } from '@/lib/ai/models';
 import { createFallbackChatTitle, generateChatTitle } from '@/lib/ai/title';
 import {
@@ -17,6 +17,21 @@ import {
 type Params = {
   params: Promise<{ chatId: string }>;
 };
+
+function withContextUsage(
+  usage: LanguageModelUsage | null,
+  context: Awaited<ReturnType<typeof buildChatContext>>['metadata'],
+): LanguageModelUsage | null {
+  if (!usage) return null;
+
+  return {
+    ...usage,
+    raw: {
+      ...(usage.raw ?? {}),
+      context,
+    },
+  };
+}
 
 export async function POST(req: Request, { params }: Params) {
   try {
@@ -195,7 +210,7 @@ export async function POST(req: Request, { params }: Params) {
           }
         : message,
     );
-    const modelMessages = await buildModelMessages(messagesForModel);
+    const chatContext = await buildChatContext(messagesForModel);
     const parsedRegenerateMessageId =
       trigger === 'regenerate-message' && messageId ? uuidSchema.safeParse(messageId) : null;
     const assistantMessageId = parsedRegenerateMessageId?.success
@@ -213,7 +228,7 @@ export async function POST(req: Request, { params }: Params) {
     try {
       result = streamText({
         model: selectedModel.id,
-        messages: modelMessages,
+        messages: chatContext.modelMessages,
         onFinish: (event) => {
           usage = event.totalUsage;
         },
@@ -269,7 +284,7 @@ export async function POST(req: Request, { params }: Params) {
               parts: responseMessage.parts,
               finishReason: finishReason ?? null,
               isAborted,
-              usage,
+              usage: withContextUsage(usage, chatContext.metadata),
               error: streamError,
             },
             selectedModel.id,
